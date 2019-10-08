@@ -92,6 +92,9 @@ public class SnapshotCommand extends Command {
             ZipEntry entry;
             while ((entry = input.getNextEntry()) != null) {
                 File targetEntry = new File(targetDir, entry.getName());
+                if (!targetEntry.getCanonicalPath().startsWith(targetDir.getCanonicalPath())) {
+                    throw new IOException("The output file is not contained in the destination directory");
+                }
 
                 if (entry.isDirectory()) {
                     if (!targetEntry.mkdirs()) {

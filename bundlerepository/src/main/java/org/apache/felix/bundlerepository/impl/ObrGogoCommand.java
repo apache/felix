@@ -765,6 +765,9 @@ public class ObrGogoCommand
             }
 
             File target = new File(dir, je.getName());
+            if (!target.getCanonicalPath().startsWith(dir.getCanonicalPath())) {
+                throw new IOException("The output file is not contained in the destination directory");
+            }
 
             // Check to see if the JAR entry is a directory.
             if (je.isDirectory())
