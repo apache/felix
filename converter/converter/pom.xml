@@ -23,13 +23,13 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>felix-parent</artifactId>
         <version>6</version>
-        <relativePath>../pom/pom.xml</relativePath>
+        <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
     <name>Apache Felix Converter</name>
     <artifactId>org.apache.felix.converter</artifactId>
     <version>1.0.11-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/felix/trunk/converter/converter</connection>
@@ -57,35 +57,59 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>4.2.0</version>
+                <version>4.2.1</version>
+                <extensions>true</extensions>
                 <executions>
                     <execution>
                         <id>bundle</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>bundle</goal>
                         </goals>
+                        <configuration>
+                            <instructions>
+                                <Export-Package>
+                                    org.osgi.util.converter;-split-package:=merge-first
+                                </Export-Package>
+                                <Import-Package>
+                                    org.osgi.util.converter,
+                                    *
+                                </Import-Package>
+                            </instructions>
+                        </configuration>
                     </execution>
                     <execution>
-                        <id>baseline</id>
+                        <id>allbundle</id>
                         <goals>
-                            <goal>baseline</goal>
+                            <goal>bundle</goal>
                         </goals>
+                        <configuration>
+                            <classifier>all</classifier>
+                            <instructions>
+                                <Bundle-Name>
+                                    ${project.name} (All In One)
+                                </Bundle-Name>
+                                <Bundle-Version>
+                                    ${project.version}-all
+                                </Bundle-Version>
+                                <Export-Package>
+                                    org.osgi.util.converter,
+                                    org.osgi.util.function
+                                </Export-Package>
+                                <Import-Package>
+                                    org.osgi.util.converter,
+                                    org.osgi.util.function,
+                                    *
+                                </Import-Package>
+                                <Embed-Dependency>
+                                    org.osgi.util.function;inline=true
+                                </Embed-Dependency>
+                                <_removeheaders>
+                                    Embed-Dependency
+                                </_removeheaders>
+                            </instructions>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <instructions>
-                        <Export-Package>
-                            org.osgi.util.function,
-                            org.osgi.util.converter;-split-package:=merge-first
-                        </Export-Package>
-                        <Import-Package>
-                            org.osgi.util.function,
-                            org.osgi.util.converter,
-                            *
-                        </Import-Package>
-                    </instructions>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>
@@ -107,6 +131,7 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.util.function</artifactId>
             <version>1.0.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
