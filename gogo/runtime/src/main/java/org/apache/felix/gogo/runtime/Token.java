@@ -83,6 +83,9 @@ public class Token implements CharSequence {
 
     public Token subSequence(int start, int end)
     {
+        if (end > length) {
+            end = length;
+        }
         int line = this.line;
         int col = this.column;
         for (int i = this.start; i < this.start + start; i++)

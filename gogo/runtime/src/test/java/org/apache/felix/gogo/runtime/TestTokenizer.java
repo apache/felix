@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -521,6 +522,16 @@ public class TestTokenizer
         {
             tio.stop();
         }
+    }
+    
+    /**
+     * FELIX-5535
+     */
+    @Test
+    public void testLtGt() {
+        Tokenizer tk = new Tokenizer("<");
+        Token token = tk.next();
+        Assert.assertEquals("<", token.toString());
     }
 
     @Test
