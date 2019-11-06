@@ -109,6 +109,12 @@
                             </instructions>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>baseline</id>
+                        <goals>
+                            <goal>baseline</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
