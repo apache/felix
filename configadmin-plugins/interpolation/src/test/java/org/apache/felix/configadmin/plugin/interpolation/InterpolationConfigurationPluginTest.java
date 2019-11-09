@@ -48,14 +48,16 @@ public class InterpolationConfigurationPluginTest {
         Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("foo", "bar");
         dict.put("replaced", "$[secret:testfile]");
+        dict.put("defaulted", "$[secret:not_there;default=defval123]");
         dict.put("cur.user", "$[env:" + userVar + "]");
         dict.put("intval", 999);
         dict.put(Constants.SERVICE_PID, "my.service");
         plugin.modifyConfiguration(null, dict);
 
-        assertEquals(5, dict.size());
+        assertEquals(6, dict.size());
         assertEquals("bar", dict.get("foo"));
         assertEquals("line1\nline2", dict.get("replaced"));
+        assertEquals("defval123", dict.get("defaulted"));
         assertEquals(envUser, dict.get("cur.user"));
         assertEquals("my.service", dict.get(Constants.SERVICE_PID));
         assertEquals(999, dict.get("intval"));
@@ -127,5 +129,17 @@ public class InterpolationConfigurationPluginTest {
                 new File(rf).getParent());
 
         assertEquals("foo", plugin.replaceVariablesFromFile("akey", "foo", "apid"));
+    }
+
+    @Test
+    public void testDefault() throws IOException {
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null, null);
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("defaulted", "$[env:notset;default=foo]");
+
+        plugin.modifyConfiguration(null, dict);
+
+        assertEquals("foo", dict.get("defaulted"));
     }
 }

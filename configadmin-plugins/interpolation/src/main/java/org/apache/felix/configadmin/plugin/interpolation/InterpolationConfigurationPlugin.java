@@ -25,8 +25,11 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -83,10 +86,10 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                         newVal = replaceVariablesFromProperties(key, sv, pid);
                     }
 
-                    if (newVal != null)
+                    if (newVal != null && !newVal.equals(sv)) {
                         properties.put(key, newVal);
-
-                    getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
+                        getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
+                    }
                 }
             }
         }
@@ -140,13 +143,44 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             final String var = m.group();
 
             final int len = var.length();
-            final String varName = var.substring(prefix.length(), len - SUFFIX.length());
+            final int idx = var.indexOf(';');
+
+            final Map<String, String> directives;
+            final int endIdx;
+            if (idx >= 0) {
+                endIdx = idx;
+                directives = parseDirectives(var.substring(idx, len - SUFFIX.length()));
+            } else {
+                endIdx = len - SUFFIX.length();
+                directives = Collections.emptyMap();
+            }
+
+            final String varName = var.substring(prefix.length(), endIdx);
             String replacement = valueSource.apply(varName);
-            if (replacement != null)
+            if (replacement != null) {
                 m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+            } else {
+                String defVal = directives.get("default");
+                if (defVal != null) {
+                    m.appendReplacement(sb, Matcher.quoteReplacement(defVal));
+                }
+            }
         }
         m.appendTail(sb);
 
         return sb.toString();
+    }
+
+    private Map<String, String> parseDirectives(String dirString) {
+        Map<String, String> dirs = new HashMap<>();
+
+        for (String dir : dirString.split(";")) {
+            String[] kv = dir.split("=");
+            if (kv.length == 2) {
+                dirs.put(kv[0], kv[1]);
+            }
+        }
+
+        return dirs;
     }
 }
