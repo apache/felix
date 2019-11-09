@@ -20,6 +20,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.ConfigurationPlugin;
+import org.osgi.util.converter.Converters;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -44,6 +45,46 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final Pattern PROP_PATTERN = createPattern(PROP_PREFIX);
     private static final String SECRET_PREFIX = PREFIX + "secret:";
     private static final Pattern SECRET_PATTERN = createPattern(SECRET_PREFIX);
+
+    private static final Map<String, Class<?>> TYPE_MAP = new HashMap<>();
+    static {
+        // scalar types and primitive types
+        TYPE_MAP.put("String", String.class);
+        TYPE_MAP.put("Integer", Integer.class);
+        TYPE_MAP.put("int", Integer.class);
+        TYPE_MAP.put("Long", Long.class);
+        TYPE_MAP.put("long", Long.class);
+        TYPE_MAP.put("Float", Float.class);
+        TYPE_MAP.put("float", Float.class);
+        TYPE_MAP.put("Double", Double.class);
+        TYPE_MAP.put("double", Double.class);
+        TYPE_MAP.put("Byte", Byte.class);
+        TYPE_MAP.put("byte", Byte.class);
+        TYPE_MAP.put("Short", Short.class);
+        TYPE_MAP.put("short", Short.class);
+        TYPE_MAP.put("Character", Character.class);
+        TYPE_MAP.put("char", Character.class);
+        TYPE_MAP.put("Boolean", Boolean.class);
+        TYPE_MAP.put("boolean", Boolean.class);
+         // array of scalar types and primitive types
+        TYPE_MAP.put("String[]", String[].class);
+        TYPE_MAP.put("Integer[]", Integer[].class);
+        TYPE_MAP.put("int[]", int[].class);
+        TYPE_MAP.put("Long[]", Long[].class);
+        TYPE_MAP.put("long[]", long[].class);
+        TYPE_MAP.put("Float[]", Float[].class);
+        TYPE_MAP.put("float[]", float[].class);
+        TYPE_MAP.put("Double[]", Double[].class);
+        TYPE_MAP.put("double[]", double[].class);
+        TYPE_MAP.put("Byte[]", Byte[].class);
+        TYPE_MAP.put("byte[]", byte[].class);
+        TYPE_MAP.put("Short[]", Short[].class);
+        TYPE_MAP.put("short[]", short[].class);
+        TYPE_MAP.put("Boolean[]", Boolean[].class);
+        TYPE_MAP.put("boolean[]", boolean[].class);
+        TYPE_MAP.put("Character[]", Character[].class);
+        TYPE_MAP.put("char[]", char[].class);
+    }
 
     private static Pattern createPattern(String prefix) {
         return Pattern.compile("\\Q" + prefix + "\\E.+?\\Q" + SUFFIX + "\\E");
@@ -139,6 +180,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             final Function<String, String> valueSource) {
         final Matcher m = pattern.matcher(value);
         final StringBuffer sb = new StringBuffer();
+        String type = null;
         while (m.find()) {
             final String var = m.group();
 
@@ -165,10 +207,11 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                     m.appendReplacement(sb, Matcher.quoteReplacement(defVal));
                 }
             }
+            type = directives.get("type");
         }
         m.appendTail(sb);
 
-        return sb.toString();
+        return convertType(type, sb.toString());
     }
 
     private Map<String, String> parseDirectives(String dirString) {
@@ -182,5 +225,19 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         }
 
         return dirs;
+    }
+
+    private Object convertType(String type, String s) {
+        if (type == null) {
+            return s;
+        }
+
+        Class<?> cls = TYPE_MAP.get(type);
+        if (cls != null) {
+            return Converters.standardConverter().convert(s).to(cls);
+        }
+
+        getLog().warn("Cannot convert to type: " + type);
+        return s;
     }
 }

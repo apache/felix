@@ -142,4 +142,16 @@ public class InterpolationConfigurationPluginTest {
 
         assertEquals("foo", dict.get("defaulted"));
     }
+
+    @Test
+    public void testTypeConversion() throws IOException {
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null, null);
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("defaulted", "$[env:notset;default=123;type=Integer]");
+
+        plugin.modifyConfiguration(null, dict);
+
+        assertEquals(Integer.valueOf(123), dict.get("defaulted"));
+    }
 }
