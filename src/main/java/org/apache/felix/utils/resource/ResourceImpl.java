@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.felix.utils.collections.StringArrayMap;
 import org.osgi.framework.Version;
@@ -115,6 +116,20 @@ public class ResourceImpl implements Resource {
             }
         }
         return "Unidentified resource";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResourceImpl resource = (ResourceImpl) o;
+        return Objects.equals(caps, resource.caps) &&
+                Objects.equals(reqs, resource.reqs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(caps, reqs);
     }
 
 }
