@@ -511,7 +511,7 @@ public class ManifestPlugin extends BundlePlugin
             {
                 try ( OutputStream os = buildContext.newFileOutputStream( outputFile ) )
                 {
-                    os.write( curdata );
+                    os.write( newdata );
                 }
             }
         }
