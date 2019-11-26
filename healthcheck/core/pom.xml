@@ -40,7 +40,7 @@
     <properties>
         <felix.java.version>8</felix.java.version>
         <pax-exam.version>4.11.0</pax-exam.version>
-        <pax-link.version>2.4.3</pax-link.version>
+        <pax-link.version>2.6.2</pax-link.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <project.bundle.file>${project.build.directory}/${project.build.finalName}.jar</project.bundle.file>

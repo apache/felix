@@ -21,7 +21,7 @@
 	<properties>
 		<osgi.version>4.2.0</osgi.version>
 		<pax.exam.version>3.6.0</pax.exam.version>
-		<pax.url.version>1.6.0</pax.url.version>
+		<pax.url.version>2.6.2</pax.url.version>
 	</properties>
 	<name>Apache Felix DeploymentAdmin Integration Tests</name>
 	<version>0.1.1-SNAPSHOT</version>
@@ -35,6 +35,13 @@
 			<version>4.4.1</version>
 			<scope>test</scope>
 		</dependency>
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+            <scope>test</scope>
+        </dependency>
 
 		<dependency>
 			<groupId>org.osgi</groupId>
