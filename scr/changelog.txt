@@ -4,7 +4,7 @@ Changes in 2.1.18
     * [FELIX-6096] - SCR fails if the Java Runtime Environment does not support permissions
     * [FELIX-6206] - NPE in ComponentRegistry.getComponentHolders()
 ** Improvement
-    * [FELIX-6107] - Loggging Passwords when invoking activate Method
+    * [FELIX-6107] - Logging Passwords when invoking activate Method
 
 Changes in 2.1.16
 -----------------
