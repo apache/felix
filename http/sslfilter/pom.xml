@@ -107,13 +107,13 @@
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
+            <version>3.2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-servlet</artifactId>
-          <version>9.2.15.v20160210</version>
+          <version>9.4.24.v20191120</version>
           <scope>test</scope>
         </dependency>
 
