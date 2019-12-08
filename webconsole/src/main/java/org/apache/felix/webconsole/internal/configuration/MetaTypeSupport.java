@@ -42,13 +42,6 @@ import org.osgi.service.metatype.AttributeDefinition;
 class MetaTypeSupport
 {
 
-    /**
-     * Attribute type code for PASSWORD attributes as defined in
-     * Metatype Service Specification 1.2. Since we cannot yet refer
-     * to the 1.2 API package we just replicate the type code here. Once
-     * the API is available and can be referred to, we should use it.
-     */
-    static final int ATTRIBUTE_TYPE_PASSWORD = 12;
 
     /**
      * Marker value of password fields used as dummy values and
@@ -128,7 +121,7 @@ class MetaTypeSupport
         }
 
         // unless the property is of password type, send it
-        final boolean isPassword = propertyType == ATTRIBUTE_TYPE_PASSWORD;
+        final boolean isPassword = propertyType == AttributeDefinition.PASSWORD;
         if ( ad.getCardinality() == 0 )
         {
             // scalar
@@ -175,12 +168,6 @@ class MetaTypeSupport
         }
 
         json.endObject();
-    }
-
-
-    private static boolean isPasswordProperty( String name )
-    {
-        return name == null ? false : name.toLowerCase().indexOf( "password" ) != -1; //$NON-NLS-1$
     }
 
 
@@ -289,10 +276,6 @@ class MetaTypeSupport
 
     static int getAttributeType( final PropertyDescriptor ad )
     {
-        if ( ad.getType() == AttributeDefinition.STRING && isPasswordProperty( ad.getID() ) )
-        {
-            return ATTRIBUTE_TYPE_PASSWORD;
-        }
         return ad.getType();
     }
 
@@ -324,7 +307,7 @@ class MetaTypeSupport
             return Short.valueOf( value );
         default:
             // includes AttributeDefinition.STRING
-            // includes ATTRIBUTE_TYPE_PASSWORD/AttributeDefinition.PASSWORD
+            // includes AttributeDefinition.PASSWORD
             return value;
         }
     }
@@ -355,7 +338,7 @@ class MetaTypeSupport
         int size = values.size();
 
         // short cut for string array
-        if ( type == AttributeDefinition.STRING || type == ATTRIBUTE_TYPE_PASSWORD )
+        if ( type == AttributeDefinition.STRING || type == AttributeDefinition.PASSWORD )
         {
             return values.toArray( new String[size] );
         }

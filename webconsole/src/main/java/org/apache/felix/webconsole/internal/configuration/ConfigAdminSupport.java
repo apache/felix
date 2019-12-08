@@ -220,11 +220,11 @@ class ConfigAdminSupport
                 int attributeType = MetaTypeSupport.getAttributeType( ad );
 
                 if ( ad == null
-                        || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == MetaTypeServiceSupport.ATTRIBUTE_TYPE_PASSWORD ) ) )
+                        || ( ad.getCardinality() == 0 && ( attributeType == AttributeDefinition.STRING || attributeType == AttributeDefinition.PASSWORD ) ) )
                 {
                     String prop = request.getParameter( paramName );
                     if ( prop != null
-                            && ( attributeType != MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
+                            && ( attributeType != AttributeDefinition.PASSWORD || !MetaTypeSupport.PASSWORD_PLACEHOLDER_VALUE.equals( prop ) ) )
                     {
                         props.put( propName, prop );
                     }
@@ -253,7 +253,7 @@ class ConfigAdminSupport
                     String[] properties = request.getParameterValues( paramName );
                     if ( properties != null )
                     {
-                        if ( attributeType == MetaTypeSupport.ATTRIBUTE_TYPE_PASSWORD )
+                        if ( attributeType == AttributeDefinition.PASSWORD )
                         {
                             MetaTypeSupport.setPasswordProps( vec, properties, props.get( propName ) );
                         }

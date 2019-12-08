@@ -2,7 +2,7 @@ Changes in 4.3.18
 -----------------
 ** Bug
     * [FELIX-6185] - jQuery <3.4.0 is vulnerable to prototype pollution attacks
-
+    * [FELIX-5661] - The heuristic to derive the password type from the metatype id does not work reliably
 
 Changes in 4.3.16
 -----------------
