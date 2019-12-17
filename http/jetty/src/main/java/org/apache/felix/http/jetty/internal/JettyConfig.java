@@ -263,6 +263,9 @@ public final class JettyConfig
 
     /** Felix specific property to specify the excluded mime types. */
     public static final String FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES = "org.apache.felix.jetty.gzip.excludedMimeTypes";
+    
+    /** Felix specific property to specify the stop timeout of the jetty server */
+    public static final String FELIX_JETTY_STOP_TIMEOUT = "org.apache.felix.jetty.stopTimeout";
 
     private static String validateContextPath(String ctxPath)
     {
@@ -659,6 +662,10 @@ public final class JettyConfig
 
     public String[] getGzipExcludedMimeTypes() {
         return getStringArrayProperty(FELIX_JETTY_GZIP_EXCLUDED_MIME_TYPES, new String[0]);
+    }
+
+    public long getStopTimeout() {
+        return getLongProperty(FELIX_JETTY_STOP_TIMEOUT, -1l);
     }
 
     public void reset()

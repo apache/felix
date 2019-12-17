@@ -322,6 +322,11 @@ public final class JettyService extends AbstractLifeCycle.AbstractLifeCycleListe
             	this.server.insertHandler(gzipHandler);
             }
 
+            if(this.config.getStopTimeout() != -1)
+            {
+                this.server.setStopTimeout(this.config.getStopTimeout());
+            }
+
             this.server.start();
 
             // session id manager is only available after server is started

@@ -428,6 +428,9 @@ class ConfigMetaTypeProvider implements MetaTypeProvider
                 "If this property is set, each http context gets a unique session id (derived from the container session).",
                 HttpConfig.DEFAULT_UNIQUE_SESSION_ID,
                 bundle.getBundleContext().getProperty(HttpConfig.PROP_UNIQUE_SESSION_ID)));
+        adList.add(new AttributeDefinitionImpl(JettyConfig.FELIX_JETTY_STOP_TIMEOUT, "Server stop timeout",
+                "If not -1, stop timeout for the server in milliseconds.", -1L,
+                bundle.getBundleContext().getProperty(JettyConfig.FELIX_JETTY_STOP_TIMEOUT)));
 
         return new ObjectClassDefinition()
         {
