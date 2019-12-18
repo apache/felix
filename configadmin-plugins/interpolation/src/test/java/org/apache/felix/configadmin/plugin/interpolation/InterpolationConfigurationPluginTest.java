@@ -16,17 +16,17 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 
 public class InterpolationConfigurationPluginTest {
     @Test
@@ -153,5 +153,23 @@ public class InterpolationConfigurationPluginTest {
         plugin.modifyConfiguration(null, dict);
 
         assertEquals(Integer.valueOf(123), dict.get("defaulted"));
+    }
+
+    @Test
+    public void testReplacementInStringArray() throws IOException {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null);
+
+        Dictionary<String, Object> dict = new Hashtable<>();
+        dict.put("array", new String[] { "1", "$[prop:foo.bar]", "3" });
+
+        plugin.modifyConfiguration(null, dict);
+
+        String[] array = (String[]) dict.get("array");
+        assertEquals(3, array.length);
+        assertEquals("1", array[0]);
+        assertEquals("hello there", array[1]);
+        assertEquals("3", array[2]);
     }
 }

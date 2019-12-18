@@ -16,13 +16,6 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.cm.ConfigurationPlugin;
-import org.osgi.util.converter.Converters;
-import org.slf4j.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,6 +27,13 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.ConfigurationPlugin;
+import org.osgi.util.converter.Converters;
+import org.slf4j.Logger;
 
 class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final String PREFIX = "$[";
@@ -109,39 +109,61 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
 
     @Override
     public void modifyConfiguration(ServiceReference<?> reference, Dictionary<String, Object> properties) {
+        final Object pid = properties.get(Constants.SERVICE_PID);
         for (Enumeration<String> keys = properties.keys(); keys.hasMoreElements(); ) {
             String key = keys.nextElement();
             Object val = properties.get(key);
             if (val instanceof String) {
-                String sv = (String) val;
-                int idx = sv.indexOf(PREFIX);
-                if (idx != -1) {
-                    String varStart = sv.substring(idx);
-                    Object pid = properties.get(Constants.SERVICE_PID);
-                    Object newVal = null;
-                    if (varStart.startsWith(SECRET_PREFIX)) {
-                        newVal = replaceVariablesFromFile(key, sv, pid);
-                    } else if (varStart.startsWith(ENV_PREFIX)) {
-                        newVal = replaceVariablesFromEnvironment(key, sv, pid);
-                    } else if (varStart.startsWith(PROP_PREFIX)) {
-                        newVal = replaceVariablesFromProperties(key, sv, pid);
+                Object newVal = replace(key, pid, (String) val);
+                if (newVal != null && !newVal.equals(val)) {
+                    properties.put(key, newVal);
+                    getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
+                }
+            } else if (val instanceof String[]) {
+                String[] array = (String[]) val;
+                String[] newArray = null;
+                for (int i = 0; i < array.length; i++) {
+                    Object newVal = replace(key, pid, array[i]);
+                    if (newVal != null && !newVal.equals(array[i])) {
+                        if (newArray == null) {
+                            newArray = new String[array.length];
+                            System.arraycopy(array, 0, newArray, 0, array.length);
+                        }
+                        newArray[i] = newVal.toString();
                     }
-
-                    if (newVal != null && !newVal.equals(sv)) {
-                        properties.put(key, newVal);
-                        getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
-                    }
+                }
+                if (newArray != null) {
+                    properties.put(key, newArray);
+                    getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
                 }
             }
         }
     }
 
-    Object replaceVariablesFromEnvironment(final String key, final String value, final Object pid) {
-        return replaceVariables(ENV_PREFIX, ENV_PATTERN, key, value, pid, n -> System.getenv(n));
+    private Object replace(final String key, Object pid, String sv) {
+        int idx = sv.indexOf(PREFIX);
+        if (idx != -1) {
+            String varStart = sv.substring(idx);
+            Object newVal = null;
+            if (varStart.startsWith(SECRET_PREFIX)) {
+                newVal = replaceVariablesFromFile(key, sv, pid);
+            } else if (varStart.startsWith(ENV_PREFIX)) {
+                newVal = replaceVariablesFromEnvironment(sv);
+            } else if (varStart.startsWith(PROP_PREFIX)) {
+                newVal = replaceVariablesFromProperties(sv);
+            }
+
+            return newVal;
+        }
+        return null;
     }
 
-    Object replaceVariablesFromProperties(final String key, final String value, final Object pid) {
-        return replaceVariables(PROP_PREFIX, PROP_PATTERN, key, value, pid, n -> context.getProperty(n));
+    Object replaceVariablesFromEnvironment(final String value) {
+        return replaceVariables(ENV_PREFIX, ENV_PATTERN, value, n -> System.getenv(n));
+    }
+
+    Object replaceVariablesFromProperties(final String value) {
+        return replaceVariables(PROP_PREFIX, PROP_PATTERN, value, n -> context.getProperty(n));
     }
 
     Object replaceVariablesFromFile(final String key, final String value, final Object pid) {
@@ -151,7 +173,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             return null;
         }
 
-        return replaceVariables(SECRET_PREFIX, SECRET_PATTERN, key, value, pid, n -> {
+        return replaceVariables(SECRET_PREFIX, SECRET_PATTERN, value, n -> {
             if (n.contains("..")) {
                 getLog().error("Illegal secret location: " + n + " Going up in the directory structure is not allowed");
                 return null;
@@ -176,7 +198,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     }
 
     Object replaceVariables(final String prefix, final Pattern pattern,
-            final String key, final String value, final Object pid,
+            final String value, 
             final Function<String, String> valueSource) {
         final Matcher m = pattern.matcher(value);
         final StringBuffer sb = new StringBuffer();
