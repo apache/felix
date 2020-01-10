@@ -18,6 +18,7 @@ package org.apache.felix.configadmin.plugin.interpolation;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -86,7 +87,9 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private final BundleContext context;
     private final File directory;
 
-    InterpolationConfigurationPlugin(BundleContext bc, String dir) {
+    private final Charset encodingCharset;
+
+    InterpolationConfigurationPlugin(BundleContext bc, String dir, String fileEncoding) {
         context = bc;
         if (dir != null) {
             directory = new File(dir);
@@ -94,6 +97,12 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         } else {
             directory = null;
         }
+        if (fileEncoding == null) {
+            encodingCharset = Charset.defaultCharset();
+        } else {
+            encodingCharset = Charset.forName(fileEncoding);
+        }
+
     }
 
     private Logger getLog() {
@@ -204,7 +213,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
 
             return null;
         }
-        return new String(bytes).trim();
+        return new String(bytes, this.encodingCharset).trim();
     }
 
     private Object convertType(String type, String s) {

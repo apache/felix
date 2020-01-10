@@ -16,6 +16,9 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -24,12 +27,13 @@ import org.osgi.service.cm.ConfigurationPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 @Header(name=Constants.BUNDLE_ACTIVATOR, value="${@class}")
 public class Activator implements BundleActivator {
     static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.dir";
+    static final String ENCODING_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.file.encoding";
+
+    static final String PLUGIN_ID = "org.apache.felix.configadmin.plugin.interpolation";
+
     static final int PLUGIN_RANKING = 500;
 
     static final Logger LOG = LoggerFactory.getLogger(InterpolationConfigurationPlugin.class);
@@ -37,16 +41,23 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         String directory = context.getProperty(DIR_PROPERTY);
+        String encoding = context.getProperty(ENCODING_PROPERTY);
 
-        ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(context, directory);
+        ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(context, directory, encoding);
         Dictionary<String, Object> props = new Hashtable<>();
         props.put(ConfigurationPlugin.CM_RANKING, PLUGIN_RANKING);
-        props.put("config.plugin.id", "org.apache.felix.configadmin.plugin.interpolation");
+        props.put("config.plugin.id", PLUGIN_ID);
 
         if (directory != null)
             props.put(DIR_PROPERTY, directory);
         else
             props.put(DIR_PROPERTY, "<not configured>");
+
+        if (encoding != null)
+            props.put(ENCODING_PROPERTY, encoding);
+        else
+            props.put(ENCODING_PROPERTY, "<not configured>");
+
         context.registerService(ConfigurationPlugin.class, plugin, props);
     }
 

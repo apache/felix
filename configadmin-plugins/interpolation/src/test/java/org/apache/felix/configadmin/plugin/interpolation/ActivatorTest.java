@@ -16,6 +16,12 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -23,12 +29,6 @@ import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationPlugin;
-
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-
-import static org.junit.Assert.assertEquals;
 
 public class ActivatorTest {
     @SuppressWarnings("unchecked")
@@ -38,6 +38,7 @@ public class ActivatorTest {
 
         BundleContext ctx = Mockito.mock(BundleContext.class);
         Mockito.when(ctx.getProperty(Activator.DIR_PROPERTY)).thenReturn("/tmp/somewhere");
+        Mockito.when(ctx.getProperty(Activator.ENCODING_PROPERTY)).thenReturn("UTF-8");
         Mockito.when(ctx.registerService(
             Mockito.eq(ConfigurationPlugin.class),
             Mockito.isA(ConfigurationPlugin.class),
@@ -58,6 +59,7 @@ public class ActivatorTest {
 
         Dictionary<String, Object> expected = new Hashtable<>();
         expected.put(Activator.DIR_PROPERTY, "/tmp/somewhere");
+        expected.put(Activator.ENCODING_PROPERTY, "UTF-8");
         expected.put(ConfigurationPlugin.CM_RANKING, Activator.PLUGIN_RANKING);
         expected.put("config.plugin.id", "org.apache.felix.configadmin.plugin.interpolation");
         assertEquals(expected, regProps);
