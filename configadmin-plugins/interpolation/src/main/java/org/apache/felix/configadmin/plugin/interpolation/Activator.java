@@ -29,7 +29,8 @@ import org.slf4j.LoggerFactory;
 
 @Header(name=Constants.BUNDLE_ACTIVATOR, value="${@class}")
 public class Activator implements BundleActivator {
-    static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.dir";
+    static final String DEPRECATED_DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.dir";
+    static final String DIR_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.secretsdir";
     static final String ENCODING_PROPERTY = "org.apache.felix.configadmin.plugin.interpolation.file.encoding";
 
     static final String PLUGIN_ID = "org.apache.felix.configadmin.plugin.interpolation";
@@ -41,6 +42,13 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         String directory = context.getProperty(DIR_PROPERTY);
+        if (directory == null) {
+            directory = context.getProperty(DEPRECATED_DIR_PROPERTY);
+            if (directory != null) {
+                LOG.warn("Deprecated property is used for configuration, switch from using '" + DEPRECATED_DIR_PROPERTY
+                        + "' to the new '" + DIR_PROPERTY + "'.");
+            }
+        }
         String encoding = context.getProperty(ENCODING_PROPERTY);
 
         ConfigurationPlugin plugin = new InterpolationConfigurationPlugin(context, directory, encoding);
