@@ -19,14 +19,10 @@ package org.apache.felix.configadmin.plugin.interpolation;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -36,15 +32,16 @@ import org.osgi.util.converter.Converters;
 import org.slf4j.Logger;
 
 class InterpolationConfigurationPlugin implements ConfigurationPlugin {
-    private static final String PREFIX = "$[";
-    private static final String SUFFIX = "]";
 
-    private static final String ENV_PREFIX = PREFIX + "env:";
-    private static final Pattern ENV_PATTERN = createPattern(ENV_PREFIX);
-    private static final String PROP_PREFIX = PREFIX + "prop:";
-    private static final Pattern PROP_PATTERN = createPattern(PROP_PREFIX);
-    private static final String SECRET_PREFIX = PREFIX + "secret:";
-    private static final Pattern SECRET_PATTERN = createPattern(SECRET_PREFIX);
+    private static final String TYPE_ENV = "env";
+
+    private static final String TYPE_PROP = "prop";
+
+    private static final String TYPE_SECRET = "secret";
+
+    private static final String DIRECTIVE_TYPE = "type";
+
+    private static final String DIRECTIVE_DEFAULT = "default";
 
     private static final Map<String, Class<?>> TYPE_MAP = new HashMap<>();
     static {
@@ -86,10 +83,6 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         TYPE_MAP.put("char[]", char[].class);
     }
 
-    private static Pattern createPattern(String prefix) {
-        return Pattern.compile("\\Q" + prefix + "\\E.+?\\Q" + SUFFIX + "\\E");
-    }
-
     private final BundleContext context;
     private final File directory;
 
@@ -114,7 +107,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
             String key = keys.nextElement();
             Object val = properties.get(key);
             if (val instanceof String) {
-                Object newVal = replace(key, pid, (String) val);
+                Object newVal = getNewValue(key, (String) val, pid);
                 if (newVal != null && !newVal.equals(val)) {
                     properties.put(key, newVal);
                     getLog().info("Replaced value of configuration property '{}' for PID {}", key, pid);
@@ -123,7 +116,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                 String[] array = (String[]) val;
                 String[] newArray = null;
                 for (int i = 0; i < array.length; i++) {
-                    Object newVal = replace(key, pid, array[i]);
+                    Object newVal = getNewValue(key, array[i], pid);
                     if (newVal != null && !newVal.equals(array[i])) {
                         if (newArray == null) {
                             newArray = new String[array.length];
@@ -140,113 +133,78 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         }
     }
 
-    private Object replace(final String key, Object pid, String sv) {
-        int idx = sv.indexOf(PREFIX);
-        if (idx != -1) {
-            String varStart = sv.substring(idx);
-            Object newVal = null;
-            if (varStart.startsWith(SECRET_PREFIX)) {
-                newVal = replaceVariablesFromFile(key, sv, pid);
-            } else if (varStart.startsWith(ENV_PREFIX)) {
-                newVal = replaceVariablesFromEnvironment(sv);
-            } else if (varStart.startsWith(PROP_PREFIX)) {
-                newVal = replaceVariablesFromProperties(sv);
-            }
-
-            return newVal;
+    private Object getNewValue(final String key, final String value, final Object pid) {
+        final Object result = replace(key, value, pid);
+        if (value.equals(result)) {
+            return null;
         }
-        return null;
+        return result;
     }
 
-    Object replaceVariablesFromEnvironment(final String value) {
-        return replaceVariables(ENV_PREFIX, ENV_PATTERN, value, n -> System.getenv(n));
+    Object replace(final String key, final String value, final Object pid) {
+        final Object result = Interpolator.replace(value, (type, name, dir) -> {
+            String v = null;
+            if (TYPE_ENV.equals(type)) {
+                v = getVariableFromEnvironment(name);
+
+            } else if (TYPE_PROP.equals(type)) {
+                v = getVariableFromProperty(name);
+
+            } else if (TYPE_SECRET.equals(type)) {
+                v = getVariableFromFile(key, name, pid);
+            }
+            if (v == null) {
+                v = dir.get(DIRECTIVE_DEFAULT);
+            }
+            if (v != null && dir.containsKey(DIRECTIVE_TYPE)) {
+                return convertType(dir.get(DIRECTIVE_TYPE), v);
+            }
+            return v;
+        });
+        return result;
     }
 
-    Object replaceVariablesFromProperties(final String value) {
-        return replaceVariables(PROP_PREFIX, PROP_PATTERN, value, n -> context.getProperty(n));
+    String getVariableFromEnvironment(final String name) {
+        return System.getenv(name);
     }
 
-    Object replaceVariablesFromFile(final String key, final String value, final Object pid) {
+    String getVariableFromProperty(final String name) {
+        return context.getProperty(name);
+    }
+
+    String getVariableFromFile(final String key, final String name, final Object pid) {
         if (directory == null) {
             getLog().warn("Cannot replace property value {} for PID {}. No directory configured via framework property " +
                     Activator.DIR_PROPERTY, key, pid);
             return null;
         }
 
-        return replaceVariables(SECRET_PREFIX, SECRET_PATTERN, value, n -> {
-            if (n.contains("..")) {
-                getLog().error("Illegal secret location: " + n + " Going up in the directory structure is not allowed");
-                return null;
-            }
+        if (name.contains("..")) {
+            getLog().error("Illegal secret location: " + name + " Going up in the directory structure is not allowed");
+            return null;
+        }
 
-            File file = new File(directory, n);
-            if (!file.isFile()) {
-                getLog().warn("Cannot replace variable. Configured path is not a regular file: " + file);
-                return null;
-            }
-            byte[] bytes;
-            try {
-                bytes = Files.readAllBytes(file.toPath());
-            } catch (IOException e) {
-                getLog().error("Problem replacing configuration property '{}' for PID {} from file {}",
+        File file = new File(directory, name);
+        if (!file.isFile()) {
+            getLog().warn("Cannot replace variable. Configured path is not a regular file: " + file);
+            return null;
+        }
+
+        if (!file.getAbsolutePath().startsWith(directory.getAbsolutePath())) {
+            getLog().error("Illegal secret location: " + name + " Going out the directory structure is not allowed");
+            return null;
+        }
+
+        byte[] bytes;
+        try {
+            bytes = Files.readAllBytes(file.toPath());
+        } catch (IOException e) {
+            getLog().error("Problem replacing configuration property '{}' for PID {} from file {}",
                         key, pid, file, e);
 
-                return null;
-            }
-            return new String(bytes).trim();
-        });
-    }
-
-    Object replaceVariables(final String prefix, final Pattern pattern,
-            final String value, 
-            final Function<String, String> valueSource) {
-        final Matcher m = pattern.matcher(value);
-        final StringBuffer sb = new StringBuffer();
-        String type = null;
-        while (m.find()) {
-            final String var = m.group();
-
-            final int len = var.length();
-            final int idx = var.indexOf(';');
-
-            final Map<String, String> directives;
-            final int endIdx;
-            if (idx >= 0) {
-                endIdx = idx;
-                directives = parseDirectives(var.substring(idx, len - SUFFIX.length()));
-            } else {
-                endIdx = len - SUFFIX.length();
-                directives = Collections.emptyMap();
-            }
-
-            final String varName = var.substring(prefix.length(), endIdx);
-            String replacement = valueSource.apply(varName);
-            if (replacement != null) {
-                m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
-            } else {
-                String defVal = directives.get("default");
-                if (defVal != null) {
-                    m.appendReplacement(sb, Matcher.quoteReplacement(defVal));
-                }
-            }
-            type = directives.get("type");
+            return null;
         }
-        m.appendTail(sb);
-
-        return convertType(type, sb.toString());
-    }
-
-    private Map<String, String> parseDirectives(String dirString) {
-        Map<String, String> dirs = new HashMap<>();
-
-        for (String dir : dirString.split(";")) {
-            String[] kv = dir.split("=");
-            if (kv.length == 2) {
-                dirs.put(kv[0], kv[1]);
-            }
-        }
-
-        return dirs;
+        return new String(bytes).trim();
     }
 
     private Object convertType(String type, String s) {

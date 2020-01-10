@@ -117,9 +117,9 @@ public class InterpolationConfigurationPluginTest {
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
                 new File(rf).getParent());
 
-        assertEquals("xxla la layy", plugin.replaceVariablesFromFile("akey", "xx$[secret:testfile.txt]yy", "apid"));
+        assertEquals("xxla la layy", plugin.replace("akey", "xx$[secret:testfile.txt]yy", "apid"));
         String doesNotReplace = "xx$[" + rf + "]yy";
-        assertEquals(doesNotReplace, plugin.replaceVariablesFromFile("akey", doesNotReplace, "apid"));
+        assertEquals(doesNotReplace, plugin.replace("akey", doesNotReplace, "apid"));
     }
 
     @Test
@@ -128,7 +128,7 @@ public class InterpolationConfigurationPluginTest {
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null,
                 new File(rf).getParent());
 
-        assertEquals("foo", plugin.replaceVariablesFromFile("akey", "foo", "apid"));
+        assertEquals("foo", plugin.replace("akey", "foo", "apid"));
     }
 
     @Test
@@ -171,5 +171,29 @@ public class InterpolationConfigurationPluginTest {
         assertEquals("1", array[0]);
         assertEquals("hello there", array[1]);
         assertEquals("3", array[2]);
+    }
+
+    @Test
+    public void testMultiplePlaceholders() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
+        String rf = getClass().getResource("/testfile.txt").getFile();
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, new File(rf).getParent());
+
+        assertEquals("xxhello thereyyhello therezz",
+                plugin.replace("akey", "xx$[prop:foo.bar]yy$[prop:foo.bar]zz", "apid"));
+
+        assertEquals("xxla la layyhello therezz",
+                plugin.replace("akey", "xx$[secret:testfile.txt]yy$[prop:foo.bar]zz", "apid"));
+    }
+
+    @Test
+    public void testNestedPlaceholders() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo.bar")).thenReturn("hello there");
+        Mockito.when(bc.getProperty("key")).thenReturn("foo.bar");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null);
+
+        assertEquals("hello there", plugin.replace("akey", "$[prop:$[prop:key]]", "apid"));
     }
 }
