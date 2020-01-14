@@ -71,7 +71,7 @@ where these can be found.
 
 This is done through the following property:
 
-* `org.apache.felix.configadmin.plugin.interpolation.dir`: specify the directory where the files used for the file-based interpolation, such as Kubernetes secrets, are mounted.
+* `org.apache.felix.configadmin.plugin.interpolation.secretsdir`: specify the directory where the files used for the file-based interpolation, such as Kubernetes secrets, are mounted.
 
 The property can be provided as an OSGi Framework property or alternatively as a Java System Property. 
 
