@@ -57,8 +57,17 @@ Property values are obtained through the `$[prop:my.property]` syntax.
 
 ## Configuration of the plugin
 
-The plugin needs to be provided with the directory where the secrets can be
-found on the local filesystem.
+### Consistent processing
+
+It is recommended to configure the ConfigAdmin to only start processing once this plugin is active. In case of
+the Felix ConfigAdmin implementation, this can be achieved by using the following property:
+
+* `felix.cm.config.plugins`: `org.apache.felix.configadmin.plugin.interpolation`
+
+### Secrets lookup
+
+In order to look up secrets on the filesystem, the plugin must be provided with the directory
+where these can be found.
 
 This is done through the following property:
 
@@ -66,3 +75,4 @@ This is done through the following property:
 
 The property can be provided as an OSGi Framework property or alternatively as a Java System Property. 
 
+If the property is not present, the plugin will function, but without being able to replace values based on secrets.
