@@ -126,7 +126,8 @@ public class Scanner implements Closeable {
      */
     public Set<File> scan(boolean reportImmediately)
     {
-        File[] list = directory.listFiles(filter);
+
+        File[] list = directory.listFiles();
         Set<File> files = processFiles(reportImmediately, list);
         return new TreeSet<>(files);
     }
@@ -149,7 +150,12 @@ public class Scanner implements Closeable {
                 } 
                 else if (recurseSubdir)
                 {
-                    files.addAll(processFiles(reportImmediately, file.listFiles(filter)));
+                    files.addAll(processFiles(reportImmediately, file.listFiles()));
+                    continue;
+                }
+            }
+            else {
+                if (!filter.accept(file.getParentFile(),file.getName())){
                     continue;
                 }
             }
