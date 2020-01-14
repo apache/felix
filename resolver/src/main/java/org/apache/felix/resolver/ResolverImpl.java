@@ -22,7 +22,6 @@ import java.security.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.felix.resolver.reason.ReasonException;
@@ -1094,26 +1093,30 @@ public class ResolverImpl implements Resolver
                     continue;
                 }
 
-                ArrayMap<Capability, UsedBlames> usedPkgBlames = currentPkgs.m_usedPkgs.getOrCompute(usedPkgName);
+                ArrayMap<Set<Capability>, UsedBlames> usedPkgBlames = currentPkgs.m_usedPkgs.getOrCompute(usedPkgName);
+                List<Blame> newBlames = new ArrayList<Blame>();
                 for (Blame blame : candSourceBlames)
                 {
+                    List<Requirement> newBlameReqs;
                     if (blame.m_reqs != null)
                     {
-                        List<Requirement> blameReqs2 = new ArrayList<Requirement>(blameReqs.size() + 1);
-                        blameReqs2.addAll(blameReqs);
+                        newBlameReqs = new ArrayList<Requirement>(blameReqs.size() + 1);
+                        newBlameReqs.addAll(blameReqs);
                         // Only add the last requirement in blame chain because
                         // that is the requirement wired to the blamed capability
-                        blameReqs2.add(blame.m_reqs.get(blame.m_reqs.size() - 1));
-                        addUsedBlame(usedPkgBlames, blame.m_cap, blameReqs2, matchingCap);
-                        mergeUses(session, current, currentPkgs, blame.m_cap, blameReqs2, matchingCap,
-                            resourcePkgMap, cycleMap);
+                        newBlameReqs.add(blame.m_reqs.get(blame.m_reqs.size() - 1));
                     }
                     else
                     {
-                        addUsedBlame(usedPkgBlames, blame.m_cap, blameReqs, matchingCap);
-                        mergeUses(session, current, currentPkgs, blame.m_cap, blameReqs, matchingCap,
-                            resourcePkgMap, cycleMap);
+                        newBlameReqs = blameReqs;
                     }
+                    newBlames.add(new Blame(blame.m_cap, newBlameReqs));
+                }
+                addUsedBlames(usedPkgBlames, newBlames, matchingCap, resourcePkgMap);
+                for (Blame newBlame : newBlames)
+                {
+                    mergeUses(session, current, currentPkgs, newBlame.m_cap, newBlame.m_reqs, matchingCap,
+                        resourcePkgMap, cycleMap);
                 }
             }
         }
@@ -1276,18 +1279,31 @@ public class ResolverImpl implements Resolver
         return uses;
     }
 
-    private static void addUsedBlame(
-        ArrayMap<Capability, UsedBlames> usedBlames, Capability usedCap,
-        List<Requirement> blameReqs, Capability matchingCap)
+    private static void addUsedBlames(
+        ArrayMap<Set<Capability>, UsedBlames> usedBlames, Collection<Blame> blames, Capability matchingCap, Map<Resource, Packages> resourcePkgMap)
     {
-        // Create a new Blame based off the used capability and the
-        // blame chain requirements.
-        Blame newBlame = new Blame(usedCap, blameReqs);
-        // Find UsedBlame that uses the same capablity as the new blame.
-        UsedBlames addToBlame = usedBlames.getOrCompute(usedCap);
-        // Add the new Blame and record the matching capability cause
+        Set<Capability> usedCaps;
+        if (blames.size() == 1)
+        {
+            usedCaps = getPackageSources(blames.iterator().next().m_cap, resourcePkgMap);
+        }
+        else
+        {
+            usedCaps = new HashSet<Capability>();
+            for (Blame blame : blames)
+            {
+                usedCaps.addAll(getPackageSources(blame.m_cap, resourcePkgMap));
+            }
+        }
+
+        // Find UsedBlame that uses the same capability as the new blame.
+        UsedBlames addToBlame = usedBlames.getOrCompute(usedCaps);
+        // Add the new Blames and record the matching capability cause
         // in case the root requirement has multiple cardinality.
-        addToBlame.addBlame(newBlame, matchingCap);
+        for (Blame blame : blames)
+        {
+            addToBlame.addBlame(blame, matchingCap);
+        }
     }
 
     private ResolutionError checkPackageSpaceConsistency(
@@ -1368,14 +1384,14 @@ public class ResolverImpl implements Resolver
         {
             String pkgName = entry.getKey();
             Blame exportBlame = entry.getValue();
-            ArrayMap<Capability, UsedBlames> pkgBlames = pkgs.m_usedPkgs.get(pkgName);
+            ArrayMap<Set<Capability>, UsedBlames> pkgBlames = pkgs.m_usedPkgs.get(pkgName);
             if (pkgBlames == null)
             {
                 continue;
             }
             for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(exportBlame, usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(exportBlame, usedBlames.m_caps, resourcePkgMap))
                 {
                     mutated = (mutated != null)
                             ? mutated
@@ -1421,7 +1437,7 @@ public class ResolverImpl implements Resolver
         for (Entry<String, List<Blame>> entry : allImportRequirePkgs.fast())
         {
             String pkgName = entry.getKey();
-            ArrayMap<Capability, UsedBlames> pkgBlames = pkgs.m_usedPkgs.get(pkgName);
+            ArrayMap<Set<Capability>, UsedBlames> pkgBlames = pkgs.m_usedPkgs.get(pkgName);
             if (pkgBlames == null)
             {
                 continue;
@@ -1430,7 +1446,7 @@ public class ResolverImpl implements Resolver
 
             for (UsedBlames usedBlames : pkgBlames.values())
             {
-                if (!isCompatible(requirementBlames, usedBlames.m_cap, resourcePkgMap))
+                if (!isCompatible(requirementBlames, usedBlames.m_caps, resourcePkgMap))
                 {
                     mutated = (mutated != null)
                             ? mutated
@@ -1686,21 +1702,20 @@ public class ResolverImpl implements Resolver
     }
 
     private static boolean isCompatible(
-        Blame currentBlame, Capability candCap,
+        Blame currentBlame, Set<Capability> candSources,
         Map<Resource, Packages> resourcePkgMap)
     {
-        if (currentBlame.m_cap.equals(candCap))
+        if (candSources.contains(currentBlame.m_cap))
         {
             return true;
         }
-        Set<Capability> candSources = getPackageSources(candCap, resourcePkgMap);
         Set<Capability> currentSources = getPackageSources(currentBlame.m_cap, resourcePkgMap);
         return currentSources.containsAll(candSources)
                 || candSources.containsAll(currentSources);
     }
 
     private static boolean isCompatible(
-        List<Blame> currentBlames, Capability candCap,
+        List<Blame> currentBlames, Set<Capability> candSources,
         Map<Resource, Packages> resourcePkgMap)
     {
         int size = currentBlames.size();
@@ -1709,7 +1724,7 @@ public class ResolverImpl implements Resolver
         case 0:
             return true;
         case 1:
-            return isCompatible(currentBlames.get(0), candCap, resourcePkgMap);
+            return isCompatible(currentBlames.get(0), candSources, resourcePkgMap);
         default:
             Set<Capability> currentSources = new HashSet<Capability>(currentBlames.size());
             for (Blame currentBlame : currentBlames)
@@ -1717,7 +1732,6 @@ public class ResolverImpl implements Resolver
                 Set<Capability> blameSources = getPackageSources(currentBlame.m_cap, resourcePkgMap);
                 currentSources.addAll(blameSources);
             }
-            Set<Capability> candSources = getPackageSources(candCap, resourcePkgMap);
             return currentSources.containsAll(candSources)
                 || candSources.containsAll(currentSources);
         }
@@ -2073,7 +2087,7 @@ public class ResolverImpl implements Resolver
             System.out.println("    " + entry.getKey() + " - " + entry.getValue());
         }
         System.out.println("  USED");
-        for (Entry<String, ArrayMap<Capability, UsedBlames>> entry : packages.m_usedPkgs.entrySet())
+        for (Entry<String, ArrayMap<Set<Capability>, UsedBlames>> entry : packages.m_usedPkgs.entrySet())
         {
             System.out.println("    " + entry.getKey() + " - " + entry.getValue().values());
         }
@@ -2097,7 +2111,7 @@ public class ResolverImpl implements Resolver
         public final OpenHashMap<String, Blame> m_substitePkgs;
         public final OpenHashMap<String, List<Blame>> m_importedPkgs;
         public final OpenHashMap<String, List<Blame>> m_requiredPkgs;
-        public final OpenHashMap<String, ArrayMap<Capability, UsedBlames>> m_usedPkgs;
+        public final OpenHashMap<String, ArrayMap<Set<Capability>, UsedBlames>> m_usedPkgs;
         public final OpenHashMap<Capability, Set<Capability>> m_sources;
 
         @SuppressWarnings("serial")
@@ -2118,12 +2132,12 @@ public class ResolverImpl implements Resolver
                     return new ArrayList<Blame>();
                 }
             };
-            m_usedPkgs = new OpenHashMap<String, ArrayMap<Capability, UsedBlames>>(128) {
+            m_usedPkgs = new OpenHashMap<String, ArrayMap<Set<Capability>, UsedBlames>>(128) {
                 @Override
-                protected ArrayMap<Capability, UsedBlames> compute(String s) {
-                    return new ArrayMap<Capability, UsedBlames>() {
+                protected ArrayMap<Set<Capability>, UsedBlames> compute(String s) {
+                    return new ArrayMap<Set<Capability>, UsedBlames>() {
                         @Override
-                        protected UsedBlames compute(Capability key) {
+                        protected UsedBlames compute(Set<Capability> key) {
                             return new UsedBlames(key);
                         }
                     };
@@ -2177,18 +2191,18 @@ public class ResolverImpl implements Resolver
      */
     private static class UsedBlames
     {
-        public final Capability m_cap;
+        public final Set<Capability> m_caps;
         public final List<Blame> m_blames = new ArrayList<ResolverImpl.Blame>();
         private Map<Requirement, Set<Capability>> m_rootCauses;
 
-        public UsedBlames(Capability cap)
+        public UsedBlames(Set<Capability> caps)
         {
-            m_cap = cap;
+            m_caps = caps;
         }
 
         public void addBlame(Blame blame, Capability matchingRootCause)
         {
-            if (!m_cap.equals(blame.m_cap))
+            if (!m_caps.contains(blame.m_cap))
             {
                 throw new IllegalArgumentException(
                     "Attempt to add a blame with a different used capability: "

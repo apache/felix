@@ -913,6 +913,16 @@ public class ResolverTest
         resolver.resolve(rci);
     }
 
+    @Test
+    public void testScenario19() throws Exception
+    {
+        ResolveContext rci = populateScenario19();
+        ResolverImpl resolver = new ResolverImpl(new Logger(Logger.LOG_DEBUG), 1);
+        Map<Resource, List<Wire>> result = resolver.resolve(rci);
+
+        assertEquals("Wrong number of resolved bundles", 9, result.size());
+    }
+
     private ResolveContext populateScenario17(boolean realSubstitute,
         boolean felixResolveContext, boolean existingWirings)
     {
@@ -1088,6 +1098,97 @@ public class ResolverTest
 
         Collection<Resource> mandatory = Arrays.<Resource> asList(core1, core2, core3,
             client1, client2, bundle1, bundle2);
+        return new ResolveContextImpl(Collections.<Resource, Wiring> emptyMap(), candMap,
+            mandatory, Collections.<Resource> emptyList());
+    }
+
+    private ResolveContext populateScenario19()
+    {
+        Map<Requirement, List<Capability>> candMap = new HashMap<Requirement, List<Capability>>();
+
+        ResourceImpl split1 = new ResourceImpl("split1");
+        Capability split1_bundle = addCap(split1, BundleNamespace.BUNDLE_NAMESPACE, "splil1");
+        Capability split1_pkg = addCap(split1, PackageNamespace.PACKAGE_NAMESPACE,
+            "split.pkg");
+
+        ResourceImpl split2 = new ResourceImpl("split2");
+        Capability split2_bundle = addCap(split2, BundleNamespace.BUNDLE_NAMESPACE, "splil2");
+        Capability split2_pkg = addCap(split2, PackageNamespace.PACKAGE_NAMESPACE,
+            "split.pkg");
+
+        ResourceImpl split3 = new ResourceImpl("split3");
+        Capability split3_bundle = addCap(split3, BundleNamespace.BUNDLE_NAMESPACE, "splil3");
+        Capability split3_pkg = addCap(split3, PackageNamespace.PACKAGE_NAMESPACE,
+            "split.pkg");
+
+        ResourceImpl split4 = new ResourceImpl("split4");
+        Capability split4_bundle = addCap(split4, BundleNamespace.BUNDLE_NAMESPACE,
+            "splil4");
+        Capability split4_pkg = addCap(split4, PackageNamespace.PACKAGE_NAMESPACE,
+            "split.pkg");
+
+        GenericRequirement split3_split1Req = (GenericRequirement) addReq(split3,
+            BundleNamespace.BUNDLE_NAMESPACE, "split1");
+        split3_split1Req.addDirective(BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE,
+            BundleNamespace.VISIBILITY_REEXPORT);
+        GenericRequirement split3_split2Req = (GenericRequirement) addReq(split3,
+            BundleNamespace.BUNDLE_NAMESPACE, "split2");
+        split3_split2Req.addDirective(BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE,
+            BundleNamespace.VISIBILITY_REEXPORT);
+
+        ResourceImpl reexportSplit1 = new ResourceImpl("reexportSplit1");
+        Capability reexportSplit1_bundle = addCap(reexportSplit1, BundleNamespace.BUNDLE_NAMESPACE, "reexportSplit1");
+        GenericRequirement reexportSplit1_split1Req = (GenericRequirement) addReq(
+            reexportSplit1, BundleNamespace.BUNDLE_NAMESPACE, "split1");
+        reexportSplit1_split1Req.addDirective(
+            BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE,
+            BundleNamespace.VISIBILITY_REEXPORT);
+
+        ResourceImpl reexportSplit3 = new ResourceImpl("reexportSplit3");
+        Capability reexportSplit3_bundle = addCap(reexportSplit3, BundleNamespace.BUNDLE_NAMESPACE, "reexportSplit3");
+        GenericRequirement reexportSplit3_split3Req = (GenericRequirement) addReq(
+            reexportSplit3, BundleNamespace.BUNDLE_NAMESPACE, "split3");
+        reexportSplit3_split3Req.addDirective(
+            BundleNamespace.REQUIREMENT_VISIBILITY_DIRECTIVE,
+            BundleNamespace.VISIBILITY_REEXPORT);
+
+        ResourceImpl exportUsesSplit3 = new ResourceImpl("exportUsesSplit3");
+        Capability exportUsesSplit3_bundle = addCap(exportUsesSplit3, BundleNamespace.BUNDLE_NAMESPACE, "exportUsesSplit3");
+        GenericCapability exportUsesSplit_pkg = (GenericCapability) addCap(
+            exportUsesSplit3, PackageNamespace.PACKAGE_NAMESPACE, "export.pkg");
+        exportUsesSplit_pkg.addDirective(Namespace.CAPABILITY_USES_DIRECTIVE,
+            "split.pkg");
+        GenericRequirement exportUsesSplit3_split3Req = (GenericRequirement) addReq(
+            exportUsesSplit3, BundleNamespace.BUNDLE_NAMESPACE, "reexportSplit3");
+
+        ResourceImpl requireExportAndSplit1 = new ResourceImpl("requireExportAndSplit1");
+        Requirement requireExportAndSplit1_split1Req = addReq(requireExportAndSplit1,
+            BundleNamespace.BUNDLE_NAMESPACE, "reexportSplit1");
+        Requirement requireExportAndSplit1_exportReq = addReq(requireExportAndSplit1,
+            BundleNamespace.BUNDLE_NAMESPACE, "exportUsesSplit3");
+
+            ResourceImpl importExportAndSplit = new ResourceImpl("importExportAndSplit");
+            Requirement importExportAndSplit_importExport = addReq(importExportAndSplit,
+                PackageNamespace.PACKAGE_NAMESPACE, "export.pkg");
+            Requirement importExportAndSplit_importSplit = addReq(importExportAndSplit,
+                PackageNamespace.PACKAGE_NAMESPACE, "split.pkg");
+
+        candMap.put(split3_split1Req, Arrays.asList(split1_bundle));
+        candMap.put(split3_split2Req, Arrays.asList(split2_bundle));
+        candMap.put(reexportSplit1_split1Req, Arrays.asList(split1_bundle));
+        candMap.put(reexportSplit3_split3Req, Arrays.asList(split3_bundle));
+        candMap.put(exportUsesSplit3_split3Req, Arrays.asList(reexportSplit3_bundle));
+        candMap.put(requireExportAndSplit1_split1Req, Arrays.asList(reexportSplit1_bundle));
+        candMap.put(requireExportAndSplit1_exportReq,
+            Arrays.asList(exportUsesSplit3_bundle));
+        candMap.put(importExportAndSplit_importSplit,
+            Arrays.asList(split4_pkg, split3_pkg));
+        candMap.put(importExportAndSplit_importExport,
+            Arrays.asList((Capability) exportUsesSplit_pkg));
+
+        Collection<Resource> mandatory = Arrays.<Resource> asList(split1, split2,
+            split3, split4, reexportSplit1, reexportSplit3, exportUsesSplit3,
+            requireExportAndSplit1, importExportAndSplit);
         return new ResolveContextImpl(Collections.<Resource, Wiring> emptyMap(), candMap,
             mandatory, Collections.<Resource> emptyList());
     }
