@@ -262,7 +262,7 @@ public class FieldUtils {
     	{
     		return field.getName() + " in component class " + componentClass.getName();
     	}
-    	return field.getName() + " in class " + field.getDeclaringClass().getName() + ", subclass of component class " + componentClass.getName();
+    	return field.getName() + " in class " + field.getDeclaringClass().getName() + ", superclass of component class " + componentClass.getName();
     }
 
     /**
