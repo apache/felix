@@ -18,6 +18,7 @@
  */
 package org.apache.felix.rootcause;
 
+import java.util.Optional;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.runtime.ServiceComponentRuntime;
@@ -34,13 +35,15 @@ public class RootCauseCommand {
     
     @Reference
     ServiceComponentRuntime scr;
-    
-    public DSComp rootcause(String componentName) {
-        ComponentDescriptionDTO cdesc = scr.getComponentDescriptionDTOs().stream()
-            .filter(desc -> desc.name.equals(componentName))
-            .findFirst().get();
-        DSComp rootCause = new DSRootCause(scr).getRootCause(cdesc);
-        new RootCausePrinter().print(rootCause);
-        return rootCause;
-    }
+
+
+  public DSComp rootcause(String componentName) {
+    Optional<DSComp> rootCause = scr.getComponentDescriptionDTOs().stream()
+        .filter(desc -> desc.name.equals(componentName))
+        .findFirst()
+        .map(cdesc ->  new DSRootCause(scr).getRootCause(cdesc));
+
+    rootCause.ifPresent(rc ->  new RootCausePrinter().print(rc));
+    return rootCause.orElseGet(null);
+  }
 }
