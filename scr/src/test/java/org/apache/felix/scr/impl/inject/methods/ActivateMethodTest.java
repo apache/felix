@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.inject.ActivatorParameter;
-import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.MockComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentActivator;

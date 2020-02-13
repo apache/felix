@@ -25,7 +25,7 @@ import static org.junit.Assert.assertSame;
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.logger.BundleLogger;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager.State;

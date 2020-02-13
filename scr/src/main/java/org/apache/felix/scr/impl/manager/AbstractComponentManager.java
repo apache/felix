@@ -44,6 +44,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;

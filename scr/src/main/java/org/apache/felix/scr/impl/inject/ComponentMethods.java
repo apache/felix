@@ -30,6 +30,8 @@ public interface ComponentMethods<T>
             Class<T> implementationObjectClass,
             ComponentLogger logger);
 
+    ComponentConstructor<T> getConstructor();
+
     LifecycleMethod getActivateMethod();
 
     LifecycleMethod getDeactivateMethod();
@@ -37,7 +39,4 @@ public interface ComponentMethods<T>
     LifecycleMethod getModifiedMethod();
 
     ReferenceMethods getBindMethods(String refName );
-
-	ComponentConstructor<T> getConstructor();
-
 }

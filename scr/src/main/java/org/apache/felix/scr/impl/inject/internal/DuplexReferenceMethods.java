@@ -16,10 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.internal;
 
 import java.util.List;
 
+import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.InitReferenceMethod;
+import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.ReferenceMethod;
+import org.apache.felix.scr.impl.inject.ReferenceMethods;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.osgi.framework.BundleContext;
 

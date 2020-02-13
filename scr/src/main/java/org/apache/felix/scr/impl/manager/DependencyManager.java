@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.felix.scr.impl.helper.Coercions;
 import org.apache.felix.scr.impl.inject.BindParameters;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.OpenStatus;
+import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.inject.ReferenceMethod;
 import org.apache.felix.scr.impl.inject.ReferenceMethods;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
@@ -1568,11 +1570,13 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         return m_customizer.prebind(key);
     }
 
-    public static final class OpenStatus<S, T> {
+    public static final class OpenStatusImpl<S, T> implements OpenStatus<S, T> {
         private final DependencyManager<S, T> dm;
-        OpenStatus(DependencyManager<S, T> dm) {
+
+        OpenStatusImpl(DependencyManager<S, T> dm) {
             this.dm = dm;
         }
+        @Override
         public Collection<RefPair<S, T>> getRefs(AtomicInteger trackingCount) {
             return dm.m_customizer.getRefs(trackingCount);
         }
@@ -1589,7 +1593,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
     OpenStatus<S, T> open(ComponentContextImpl<S> componentContext, EdgeInfo edgeInfo)
     {
         int serviceCount = 0;
-        final OpenStatus<S, T> status = new OpenStatus<>(this);
+        final OpenStatus<S, T> status = new OpenStatusImpl<>(this);
         Collection<RefPair<S, T>> refs;
         AtomicInteger trackingCount = new AtomicInteger();
         CountDownLatch openLatch;
@@ -1681,9 +1685,9 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
             {
                 invokeUnbindMethod(componentContext, boundRef, trackingCount.get(), edgeInfo);
             }
-            
+
             boundRef.ungetServiceObject(componentContext);
-            
+
         }
         latch.countDown();
     }
@@ -2309,7 +2313,7 @@ public class DependencyManager<S, T> implements ReferenceManager<S, T>
         }
         else
         {
-            refPair.setFailed();
+            refPair.markFailed();
             return false;
         }
     }

@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
@@ -39,22 +41,22 @@ public abstract class AbstractPrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public abstract T getServiceObject(ComponentContextImpl<S> key);
+    public abstract T getServiceObject(ScrComponentContext key);
 
     @Override
-    public abstract boolean setServiceObject(ComponentContextImpl<S> key, T serviceObject);
+    public abstract boolean setServiceObject(ScrComponentContext key, T serviceObject);
 
-    protected abstract T remove(ComponentContextImpl<S> key);
+    protected abstract T remove(ScrComponentContext key);
 
-    protected abstract Collection<Entry<ComponentContextImpl<S>, T>> clearEntries();
+    protected abstract Collection<Entry<ScrComponentContext, T>> clearEntries();
 
     @Override
-    public final T ungetServiceObject(ComponentContextImpl<S> key)
+    public final T ungetServiceObject(ScrComponentContext key)
     {
         if ( key == null )
         {
-            Collection<Map.Entry<ComponentContextImpl<S>,T>> keys = clearEntries();
-            for (Map.Entry<ComponentContextImpl<S>,T> e : keys)
+            Collection<Map.Entry<ScrComponentContext, T>> keys = clearEntries();
+            for (Map.Entry<ScrComponentContext, T> e : keys)
             {
                 doUngetService( e.getKey(), e.getValue() );
             }
@@ -76,12 +78,12 @@ public abstract class AbstractPrototypeRefPair<S, T> extends RefPair<S, T>
     public abstract String toString();
 
     @Override
-    public final boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
+    public final boolean getServiceObject(ScrComponentContext key, BundleContext context)
     {
         final T service = key.getComponentServiceObjectsHelper().getPrototypeRefInstance(this.getRef());
         if ( service == null )
         {
-            setFailed();
+            markFailed();
             key.getLogger().log(
                  LogService.LOG_WARNING,
                  "Could not get service from serviceobjects for ref {0}", null, getRef() );
@@ -96,8 +98,8 @@ public abstract class AbstractPrototypeRefPair<S, T> extends RefPair<S, T>
     }
 
 	@SuppressWarnings("unchecked")
-    private void doUngetService(ComponentContextImpl<S> key, final T service) {
-		try 
+    private void doUngetService(ScrComponentContext key, final T service) {
+		try
 		{
 			key.getComponentServiceObjectsHelper().getServiceObjects(getRef()).ungetService( service );
 		}

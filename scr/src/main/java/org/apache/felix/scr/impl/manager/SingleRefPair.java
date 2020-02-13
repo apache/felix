@@ -22,6 +22,8 @@ package org.apache.felix.scr.impl.manager;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogService;
@@ -39,24 +41,24 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public T getServiceObject(ComponentContextImpl<S> key)
+    public T getServiceObject(ScrComponentContext key)
     {
         return serviceObjectRef.get();
     }
 
     @Override
-    public boolean setServiceObject( ComponentContextImpl<S> key, T serviceObject )
+    public boolean setServiceObject(ScrComponentContext key, T serviceObject)
     {
         boolean set = serviceObjectRef.compareAndSet( null, serviceObject );
         if ( serviceObject != null)
         {
-            failed = false;
+            clearFailed();
         }
         return set;
     }
 
     @Override
-    public T ungetServiceObject(ComponentContextImpl<S> key) {
+    public T ungetServiceObject(ScrComponentContext key) {
         // null operation for singleRefPair
         return null;
     }
@@ -81,12 +83,12 @@ public class SingleRefPair<S, T> extends RefPair<S, T>
     }
 
     @Override
-    public boolean getServiceObject(ComponentContextImpl<S> key, BundleContext context)
+    public boolean getServiceObject(ScrComponentContext key, BundleContext context)
     {
         T service = context.getService( getRef() );
         if ( service == null )
         {
-            setFailed();
+            markFailed();
             key.getLogger().log(
                  LogService.LOG_WARNING,
                  "Could not get service from ref {0}", null, getRef() );

@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.impl.inject.ComponentMethods;
-import org.apache.felix.scr.impl.inject.ComponentMethodsImpl;
+import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.AbstractComponentManager;

@@ -20,13 +20,14 @@
 
 package org.apache.felix.scr.impl.manager;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -34,7 +35,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class SinglePrototypeRefPair<S, T> extends AbstractPrototypeRefPair<S, T>
 {
-    private final AtomicReference<SimpleImmutableEntry<ComponentContextImpl<S>, T>> instance = new AtomicReference<>();
+    private final AtomicReference<SimpleImmutableEntry<ScrComponentContext, T>> instance = new AtomicReference<>();
 
     public SinglePrototypeRefPair( ServiceReference<T> ref )
     {
@@ -48,22 +49,22 @@ public class SinglePrototypeRefPair<S, T> extends AbstractPrototypeRefPair<S, T>
     }
 
     @Override
-    public T getServiceObject(ComponentContextImpl<S> key) {
+    public T getServiceObject(ScrComponentContext key) {
         return internalGetServiceObject(key, false);
     }
 
     @Override
-    public boolean setServiceObject(ComponentContextImpl<S> key, T serviceObject) {
+    public boolean setServiceObject(ScrComponentContext key, T serviceObject) {
         return instance.compareAndSet(null, new SimpleImmutableEntry<>(key, serviceObject));
     }
 
     @Override
-    protected T remove(ComponentContextImpl<S> key) {
+    protected T remove(ScrComponentContext key) {
         return internalGetServiceObject(key, true);
     }
 
-    private T internalGetServiceObject(ComponentContextImpl<S> key, boolean remove) {
-        SimpleImmutableEntry<ComponentContextImpl<S>, T> entry = instance.get();
+    private T internalGetServiceObject(ScrComponentContext key, boolean remove) {
+        SimpleImmutableEntry<ScrComponentContext, T> entry = instance.get();
         if (entry == null) {
             return null;
         }
@@ -75,9 +76,9 @@ public class SinglePrototypeRefPair<S, T> extends AbstractPrototypeRefPair<S, T>
     }
 
     @Override
-    protected Collection<Entry<ComponentContextImpl<S>, T>> clearEntries() {
-        Map.Entry<ComponentContextImpl<S>, T> entry = instance.getAndSet(null);
-        return entry == null ? Collections.<Entry<ComponentContextImpl<S>, T>>emptyList() : Collections.singleton(entry);
+    protected Collection<Entry<ScrComponentContext, T>> clearEntries() {
+        Map.Entry<ScrComponentContext, T> entry = instance.getAndSet(null);
+        return entry == null ? Collections.<Entry<ScrComponentContext, T>>emptyList() : Collections.singleton(entry);
     }
 
 }

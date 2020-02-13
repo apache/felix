@@ -18,19 +18,17 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-
 public abstract class BaseParameter
 {
-    private final ComponentContextImpl<?> m_componentContext;
+    private final ScrComponentContext m_componentContext;
 
-    public BaseParameter( ComponentContextImpl<?> componentContext )
+    public BaseParameter(ScrComponentContext componentContext)
     {
         this.m_componentContext = componentContext;
     }
 
 
-    public ComponentContextImpl<?> getComponentContext()
+    public ScrComponentContext getComponentContext()
     {
         return m_componentContext;
     }

@@ -29,16 +29,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.felix.scr.impl.inject.BindParameters;
-import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.InitReferenceMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.inject.ReferenceMethod;
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.apache.felix.scr.impl.inject.ValueUtils;
 import org.apache.felix.scr.impl.inject.ValueUtils.ValueType;
 import org.apache.felix.scr.impl.inject.field.FieldUtils.FieldSearchResult;
+import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -82,7 +82,7 @@ public class FieldHandler
         BIND,
         UNBIND,
         UPDATED
-    };
+    }
 
 
     private boolean initField(final Object componentInstance,
@@ -172,8 +172,7 @@ public class FieldHandler
                                      final BindParameters bp)
         throws InvocationTargetException
     {
-        @SuppressWarnings("rawtypes")
-		final ComponentContextImpl key = bp.getComponentContext();
+        final ScrComponentContext key = bp.getComponentContext();
         final RefPair<?, ?> refPair = bp.getRefPair();
 
         if ( !this.metadata.isMultiple() )
@@ -511,12 +510,12 @@ public class FieldHandler
             if ( methodType != METHOD_TYPE.UNBIND )
             {
                 //??? this resolves which we need.... better way?
-                if ( rawParameter.getServiceObject() == null
+                if (rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext()) == null
                   && handler.fieldExists( rawParameter.getComponentContext().getLogger() )
-                  && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple 
+                  && (handler.valueType == ValueType.ref_serviceType || handler.valueType == ValueType.ref_tuple
                       || handler.valueType == ValueType.ref_logger || handler.valueType == ValueType.ref_formatterLogger) )
                 {
-                    return rawParameter.getServiceObject(context);
+                    return rawParameter.getRefPair().getServiceObject(rawParameter.getComponentContext(), context);
                 }
             }
             return true;

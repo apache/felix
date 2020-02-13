@@ -31,8 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.OpenStatus;
+import org.apache.felix.scr.impl.inject.RefPair;
 import org.apache.felix.scr.impl.inject.ReferenceMethod;
-import org.apache.felix.scr.impl.manager.DependencyManager.OpenStatus;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.TargetedPID;
@@ -237,16 +238,17 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
         }
 
         // bind target services
-        final List<DependencyManager.OpenStatus<S, ?>> openStatusList = new ArrayList<>();
+        final List<OpenStatus<S, ?>> openStatusList = new ArrayList<>();
 
-        final Map<ReferenceMetadata, DependencyManager.OpenStatus<S, ?>> paramMap = ( getComponentMetadata().getNumberOfConstructorParameters() > 0 ? new HashMap<ReferenceMetadata, DependencyManager.OpenStatus<S, ?>>() : null);
+        final Map<ReferenceMetadata, OpenStatus<S, ?>> paramMap = (getComponentMetadata()
+                .getNumberOfConstructorParameters() > 0 ? new HashMap<ReferenceMetadata, OpenStatus<S, ?>>() : null);
         boolean failed = false;
         for ( DependencyManager<S, ?> dm : getDependencyManagers())
         {
             // if a dependency turned unresolved since the validation check,
             // creating the instance fails here, so we deactivate and return
             // null.
-            DependencyManager.OpenStatus<S, ?> open = dm.open( componentContext, componentContext.getEdgeInfo( dm ) );
+            OpenStatus<S, ?> open = dm.open(componentContext, componentContext.getEdgeInfo(dm));
             if ( open == null )
             {
                 getLogger().log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",
@@ -300,10 +302,10 @@ public class SingleComponentManager<S> extends AbstractComponentManager<S> imple
             setter.presetComponentContext( componentContext );
 
             // 4. Bind the target services
-            final Iterator<DependencyManager.OpenStatus<S, ?>> iter = openStatusList.iterator();
+            final Iterator<OpenStatus<S, ?>> iter = openStatusList.iterator();
             for ( DependencyManager<S, ?> dm: getDependencyManagers())
             {
-                final DependencyManager.OpenStatus<S, ?> open = iter.next();
+                final OpenStatus<S, ?> open = iter.next();
                 if ( !dm.bind(componentContext, (OpenStatus) open) )
                 {
                     getLogger().log( LogService.LOG_DEBUG, "Cannot create component instance due to failure to bind reference {0}",

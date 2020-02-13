@@ -27,6 +27,7 @@ import java.util.IdentityHashMap;
 import org.apache.felix.scr.impl.inject.ComponentMethods;
 import org.apache.felix.scr.impl.inject.LifecycleMethod;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.RefPair;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentConstants;

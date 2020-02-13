@@ -16,12 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-
-package org.apache.felix.scr.impl.manager;
+package org.apache.felix.scr.impl.inject;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -31,7 +28,7 @@ public abstract class RefPair<S, T>
 {
     private final ServiceReference<T> ref;
 
-    boolean failed;
+    volatile boolean failed;
     volatile boolean deleted;
 
     public RefPair( ServiceReference<T> ref )
@@ -44,18 +41,23 @@ public abstract class RefPair<S, T>
         return ref;
     }
 
-    public abstract boolean getServiceObject( ComponentContextImpl<S> key, BundleContext context );
+    public abstract boolean getServiceObject(ScrComponentContext key, BundleContext context);
 
-    public abstract T getServiceObject(ComponentContextImpl<S> key);
+    public abstract T getServiceObject(ScrComponentContext key);
 
-    public abstract boolean setServiceObject( ComponentContextImpl<S> key, T serviceObject );
+    public abstract boolean setServiceObject(ScrComponentContext key, T serviceObject);
 
     public abstract void ungetServiceObjects(BundleContext context);
-    public abstract T ungetServiceObject(ComponentContextImpl<S> key);
 
-    public void setFailed( )
+    public abstract T ungetServiceObject(ScrComponentContext key);
+
+    public void markFailed( )
     {
         this.failed = true;
+    }
+
+    public void clearFailed() {
+        this.failed = false;
     }
 
     public boolean isFailed()

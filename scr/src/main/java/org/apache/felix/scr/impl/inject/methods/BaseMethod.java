@@ -28,8 +28,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.inject.BaseParameter;
-import org.apache.felix.scr.impl.inject.ClassUtils;
 import org.apache.felix.scr.impl.inject.MethodResult;
+import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.service.log.LogService;

@@ -25,9 +25,9 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.apache.felix.scr.impl.inject.internal.Annotations;
+import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -271,7 +271,7 @@ public class ValueUtils {
             final String componentType,
             final ValueType type,
             final Class<?> targetType,
-            @SuppressWarnings("rawtypes") final ComponentContextImpl componentContext,
+            final ScrComponentContext componentContext,
             final RefPair<?, ?> refPair)
     {
         final Object value;
@@ -312,10 +312,9 @@ public class ValueUtils {
 
     private static Object getLogger(String componentType,
             final Class<?> targetType,
-            @SuppressWarnings("rawtypes") final ComponentContextImpl componentContext,
+            final ScrComponentContext componentContext,
             final RefPair<?, ?> refPair )
     {
-        @SuppressWarnings("unchecked")
         final Object factory = refPair.getServiceObject(componentContext);
         if ( factory != null )
         {

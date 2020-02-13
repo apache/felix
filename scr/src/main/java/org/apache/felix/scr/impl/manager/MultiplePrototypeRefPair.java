@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -33,7 +34,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class MultiplePrototypeRefPair<S, T> extends AbstractPrototypeRefPair<S, T>
 {
-    private final ConcurrentMap<ComponentContextImpl<S>, T> instances = new ConcurrentHashMap<>();
+    private final ConcurrentMap<ScrComponentContext, T> instances = new ConcurrentHashMap<>();
 
     public MultiplePrototypeRefPair( ServiceReference<T> ref )
     {
@@ -47,23 +48,23 @@ public class MultiplePrototypeRefPair<S, T> extends AbstractPrototypeRefPair<S, 
     }
 
     @Override
-    public T getServiceObject(ComponentContextImpl<S> key) {
+    public T getServiceObject(ScrComponentContext key) {
         return instances.get(key);
     }
 
     @Override
-    public boolean setServiceObject(ComponentContextImpl<S> key, T serviceObject) {
+    public boolean setServiceObject(ScrComponentContext key, T serviceObject) {
         return instances.putIfAbsent(key, serviceObject) == null;
     }
 
     @Override
-    protected T remove(ComponentContextImpl<S> key) {
+    protected T remove(ScrComponentContext key) {
         return instances.remove(key);
     }
 
     @Override
-    protected Collection<Entry<ComponentContextImpl<S>, T>> clearEntries() {
-        Collection<Entry<ComponentContextImpl<S>, T>> result = new ArrayList<>(instances.entrySet());
+    protected Collection<Entry<ScrComponentContext, T>> clearEntries() {
+        Collection<Entry<ScrComponentContext, T>> result = new ArrayList<>(instances.entrySet());
         instances.clear();
         return result;
     }

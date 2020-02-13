@@ -27,9 +27,10 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.felix.scr.component.ExtComponentContext;
 import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
 import org.apache.felix.scr.impl.helper.ReadOnlyDictionary;
+import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
@@ -44,7 +45,7 @@ import org.osgi.service.log.LogService;
  * Implementation for the ComponentContext interface
  *
  */
-public class ComponentContextImpl<S> implements ExtComponentContext {
+public class ComponentContextImpl<S> implements ScrComponentContext {
 
     private final SingleComponentManager<S> m_componentManager;
 
@@ -92,6 +93,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         this.serviceObjectsHelper.cleanup();
     }
 
+    @Override
     public ComponentServiceObjectsHelper getComponentServiceObjectsHelper()
     {
         return this.serviceObjectsHelper;
@@ -204,6 +206,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
         return m_usingBundle;
     }
 
+    @Override
     public ComponentLogger getLogger()
     {
         return this.m_componentManager.getLogger();
@@ -305,6 +308,7 @@ public class ComponentContextImpl<S> implements ExtComponentContext {
 
     }
 
+    @Override
     public synchronized Map<RefPair<?, ?>, Object> getBoundValues(final String key)
     {
         if ( this.boundValues == null )

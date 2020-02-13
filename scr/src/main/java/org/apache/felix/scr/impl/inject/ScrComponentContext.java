@@ -18,18 +18,22 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-public final class ActivatorParameter extends BaseParameter
-{
-    private final int m_reason;
 
-    public ActivatorParameter(ScrComponentContext componentContext, int reason)
-    {
-        super(componentContext);
-        this.m_reason = reason;
-    }
+import java.util.Map;
 
-    public int getReason()
-    {
-        return m_reason;
-    }
+import org.apache.felix.scr.component.ExtComponentContext;
+import org.apache.felix.scr.impl.helper.ComponentServiceObjectsHelper;
+import org.apache.felix.scr.impl.logger.ComponentLogger;
+import org.apache.felix.scr.impl.metadata.ComponentMetadata;
+
+
+public interface ScrComponentContext extends ExtComponentContext {
+
+    ComponentLogger getLogger();
+
+    ComponentMetadata getComponentMetadata();
+
+    ComponentServiceObjectsHelper getComponentServiceObjectsHelper();
+
+    Map<RefPair<?, ?>, Object> getBoundValues(final String key);
 }

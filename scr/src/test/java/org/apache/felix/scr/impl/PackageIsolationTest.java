@@ -55,6 +55,7 @@ public class PackageIsolationTest extends TestCase {
                 "org/apache/felix/scr/impl/helper",
                 "org/apache/felix/scr/impl/inject",
                 "org/apache/felix/scr/impl/inject/field",
+                "org/apache/felix/scr/impl/inject/internal",
                 "org/apache/felix/scr/impl/inject/methods",
                 "org/apache/felix/scr/impl/logger",
                 "org/apache/felix/scr/impl/manager",

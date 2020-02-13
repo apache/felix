@@ -41,7 +41,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.felix.scr.impl.config.ScrConfigurationImpl;
-import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ScrLogger;
 import org.apache.felix.scr.impl.manager.ComponentHolder;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;

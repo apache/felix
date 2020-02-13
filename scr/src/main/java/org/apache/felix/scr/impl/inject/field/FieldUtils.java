@@ -24,7 +24,7 @@ import java.lang.reflect.Modifier;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.osgi.service.log.LogService;
 

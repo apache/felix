@@ -16,17 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.methods;
 
 
 import org.apache.felix.scr.impl.MockBundle;
+import org.apache.felix.scr.impl.inject.BindParameters;
+import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.inject.internal.ComponentMethodsImpl;
 import org.apache.felix.scr.impl.inject.methods.BindMethod;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
 import org.apache.felix.scr.impl.logger.MockComponentLogger;
 import org.apache.felix.scr.impl.manager.ComponentActivator;
 import org.apache.felix.scr.impl.manager.ComponentContainer;
 import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.manager.SingleComponentManager;
 import org.apache.felix.scr.impl.manager.SingleRefPair;
 import org.apache.felix.scr.impl.manager.components.FakeService;

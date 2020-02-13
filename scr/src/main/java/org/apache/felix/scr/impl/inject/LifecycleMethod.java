@@ -18,8 +18,6 @@
  */
 package org.apache.felix.scr.impl.inject;
 
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-
 /**
  * Interface for invocation one of the lifecycle methods:
  * <ul>
@@ -31,7 +29,7 @@ import org.apache.felix.scr.impl.manager.ComponentContextImpl;
 public interface LifecycleMethod {
 
     MethodResult invoke(Object componentInstance,
-                        ComponentContextImpl<?> componentContext,
+            ScrComponentContext componentContext,
                         int reason,
                         MethodResult methodCallFailureResult);
 

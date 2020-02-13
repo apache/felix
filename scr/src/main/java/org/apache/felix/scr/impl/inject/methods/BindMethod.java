@@ -26,11 +26,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.felix.scr.impl.inject.BindParameters;
-import org.apache.felix.scr.impl.inject.ClassUtils;
+import org.apache.felix.scr.impl.inject.RefPair;
+import org.apache.felix.scr.impl.inject.ScrComponentContext;
 import org.apache.felix.scr.impl.inject.ValueUtils;
+import org.apache.felix.scr.impl.inject.internal.ClassUtils;
 import org.apache.felix.scr.impl.logger.ComponentLogger;
-import org.apache.felix.scr.impl.manager.ComponentContextImpl;
-import org.apache.felix.scr.impl.manager.RefPair;
 import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
@@ -656,12 +656,13 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
     public <S, T> boolean getServiceObject( final BindParameters parameters, BundleContext context )
     {
         //??? this resolves which we need.... better way?
-        if ( parameters.getServiceObject() == null && methodExists( parameters.getComponentContext().getLogger() ) )
+        if (parameters.getRefPair().getServiceObject(parameters.getComponentContext()) == null
+                && methodExists(parameters.getComponentContext().getLogger()))
         {
             if ( m_paramTypes.contains(ValueUtils.ValueType.ref_serviceType)
                  || m_paramTypes.contains(ValueUtils.ValueType.ref_logger)
                  || m_paramTypes.contains(ValueUtils.ValueType.ref_formatterLogger)) {
-                return parameters.getServiceObject(context);
+                return parameters.getRefPair().getServiceObject(parameters.getComponentContext(), context);
             }
         }
         return true;
@@ -670,7 +671,7 @@ implements org.apache.felix.scr.impl.inject.ReferenceMethod
     @Override
     protected Object[] getParameters( Method method, BindParameters bp )
     {
-        ComponentContextImpl<?> key = bp.getComponentContext();
+        ScrComponentContext key = bp.getComponentContext();
         Object[] result = new Object[ m_paramTypes.size()];
         RefPair<?, ?> refPair = bp.getRefPair();
         int i = 0;

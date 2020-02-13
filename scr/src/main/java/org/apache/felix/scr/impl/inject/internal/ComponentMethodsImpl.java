@@ -18,13 +18,17 @@
  */
 
 
-package org.apache.felix.scr.impl.inject;
+package org.apache.felix.scr.impl.inject.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.impl.inject.ComponentConstructor;
+import org.apache.felix.scr.impl.inject.ComponentMethods;
+import org.apache.felix.scr.impl.inject.LifecycleMethod;
+import org.apache.felix.scr.impl.inject.ReferenceMethods;
 import org.apache.felix.scr.impl.inject.field.FieldMethods;
 import org.apache.felix.scr.impl.inject.methods.ActivateMethod;
 import org.apache.felix.scr.impl.inject.methods.BindMethods;
@@ -103,7 +107,7 @@ public class ComponentMethodsImpl<T> implements ComponentMethods<T>
             }
         }
 
-    	    m_constructor = new ComponentConstructor(componentMetadata, implementationObjectClass, logger);
+        m_constructor = new ComponentConstructorImpl(componentMetadata, implementationObjectClass, logger);
     }
 
 	@Override
