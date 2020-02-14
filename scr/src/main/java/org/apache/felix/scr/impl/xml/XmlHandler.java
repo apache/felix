@@ -32,16 +32,16 @@ import org.apache.felix.scr.impl.metadata.DSVersion;
 import org.apache.felix.scr.impl.metadata.PropertyMetadata;
 import org.apache.felix.scr.impl.metadata.ReferenceMetadata;
 import org.apache.felix.scr.impl.metadata.ServiceMetadata;
-import org.apache.felix.scr.impl.parser.KXml2SAXHandler;
-import org.apache.felix.scr.impl.parser.KXml2SAXParser.Attributes;
-import org.apache.felix.scr.impl.parser.ParseException;
 import org.osgi.framework.Bundle;
 import org.osgi.service.log.LogService;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * XML Parser for the component XML
  */
-public class XmlHandler implements KXml2SAXHandler
+public class XmlHandler extends DefaultHandler
 {
     // the bundle containing the XML resource being parsed
     private final Bundle m_bundle;
@@ -67,6 +67,8 @@ public class XmlHandler implements KXml2SAXHandler
 
     // PropertyMetaData whose value attribute is missing, hence has element data
     private PropertyMetadata m_pendingFactoryProperty;
+
+    private StringBuilder propertyBuilder;
 
     /** Flag for detecting the first element. */
     protected boolean firstElement = true;
@@ -99,16 +101,8 @@ public class XmlHandler implements KXml2SAXHandler
     }
 
 
-    /**
-     * Method called when a tag opens
-     *
-     * @param   uri
-     * @param   localName
-     * @param   attributes
-     * @exception   ParseException
-     **/
     @Override
-    public void startElement( String uri, String localName, Attributes attributes ) throws ParseException
+    public void startElement( String uri, String localName, String qName, Attributes attributes ) throws SAXException
     {
         // according to the spec, the elements should have the namespace,
         // except when the root element is the "component" element
@@ -152,77 +146,77 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentComponent = new ComponentMetadata( namespaceCode );
 
                     // name attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( XmlConstants.ATTR_NAME ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_NAME ) != null )
                     {
-                        m_currentComponent.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
+                        m_currentComponent.setName( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_NAME ) );
                     }
 
                     // enabled attribute is optional
-                    if ( attributes.getAttribute( "enabled" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "enabled" ) != null )
                     {
-                        m_currentComponent.setEnabled( attributes.getAttribute( "enabled" ).equals( "true" ) );
+                        m_currentComponent.setEnabled( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "enabled" ).equals( "true" ) );
                     }
 
                     // immediate attribute is optional
-                    if ( attributes.getAttribute( "immediate" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "immediate" ) != null )
                     {
-                        m_currentComponent.setImmediate( attributes.getAttribute( "immediate" ).equals( "true" ) );
+                        m_currentComponent.setImmediate( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "immediate" ).equals( "true" ) );
                     }
 
                     // factory attribute is optional
-                    if ( attributes.getAttribute( "factory" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "factory" ) != null )
                     {
-                        m_currentComponent.setFactoryIdentifier( attributes.getAttribute( "factory" ) );
+                        m_currentComponent.setFactoryIdentifier( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "factory" ) );
                     }
 
                     // configuration-policy is optional (since DS 1.1)
-                    if ( attributes.getAttribute( "configuration-policy" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "configuration-policy" ) != null )
                     {
-                        m_currentComponent.setConfigurationPolicy( attributes.getAttribute( "configuration-policy" ) );
+                        m_currentComponent.setConfigurationPolicy( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "configuration-policy" ) );
                     }
 
                     // activate attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( "activate" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "activate" ) != null )
                     {
-                        m_currentComponent.setActivate( attributes.getAttribute( "activate" ) );
+                        m_currentComponent.setActivate( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "activate" ) );
                     }
 
                     // deactivate attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( "deactivate" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "deactivate" ) != null )
                     {
-                        m_currentComponent.setDeactivate( attributes.getAttribute( "deactivate" ) );
+                        m_currentComponent.setDeactivate( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "deactivate" ) );
                     }
 
                     // modified attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( "modified" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "modified" ) != null )
                     {
-                        m_currentComponent.setModified( attributes.getAttribute( "modified" ) );
+                        m_currentComponent.setModified( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "modified" ) );
                     }
 
                     // configuration-pid attribute is optional (since DS 1.2)
-                    String configurationPidString = attributes.getAttribute( "configuration-pid" );
+                    String configurationPidString = attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "configuration-pid" );
                     if (configurationPidString != null)
                     {
                         String[] configurationPid = configurationPidString.split( " " );
                         m_currentComponent.setConfigurationPid( configurationPid );
                     }
 
-                    m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_CONFIGURABLE_SERVICE_PROPERTIES)));
-                    m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_PERSISTENT_FACTORY_COMPONENT)));
-                    m_currentComponent.setDeleteCallsModify("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELETE_CALLS_MODIFY)));
-                    if ( attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_OBSOLETE_FACTORY_COMPONENT_FACTORY) != null)
+                    m_currentComponent.setConfigurableServiceProperties("true".equals(attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_CONFIGURABLE_SERVICE_PROPERTIES)));
+                    m_currentComponent.setPersistentFactoryComponent("true".equals(attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_PERSISTENT_FACTORY_COMPONENT)));
+                    m_currentComponent.setDeleteCallsModify("true".equals(attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELETE_CALLS_MODIFY)));
+                    if ( attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_OBSOLETE_FACTORY_COMPONENT_FACTORY) != null)
                     {
-                        m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_OBSOLETE_FACTORY_COMPONENT_FACTORY)));
+                        m_currentComponent.setObsoleteFactoryComponentFactory("true".equals(attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_OBSOLETE_FACTORY_COMPONENT_FACTORY)));
                     }
                     else if ( !namespaceCode.isDS13() )
                     {
                         m_currentComponent.setObsoleteFactoryComponentFactory(m_globalObsoleteFactoryComponentFactory);
                     }
-                    m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_CONFIGURE_WITH_INTERFACES)));
-                    m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getAttribute(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELAYED_KEEP_INSTANCES)));
+                    m_currentComponent.setConfigureWithInterfaces("true".equals(attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_CONFIGURE_WITH_INTERFACES)));
+                    m_currentComponent.setDelayedKeepInstances(m_globalDelayedKeepInstances || "true".equals(attributes.getValue(XmlConstants.NAMESPACE_URI_1_0_FELIX_EXTENSIONS, XmlConstants.ATTR_DELAYED_KEEP_INSTANCES)));
 
                     // activation-fields is optional (since DS 1.4)
-                    String activationFields = attributes.getAttribute( XmlConstants.ATTR_ACTIVATION_FIELDS );
+                    String activationFields = attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_ACTIVATION_FIELDS );
                     if ( activationFields != null )
                     {
                         final String[] fields = activationFields.split(" ");
@@ -230,7 +224,7 @@ public class XmlHandler implements KXml2SAXHandler
                     }
 
                     // init is optional (since DS 1.4)
-                    String init = attributes.getAttribute( XmlConstants.ATTR_INIT );
+                    String init = attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_INIT );
                     if ( init != null )
                     {
                         m_currentComponent.setInit( init );
@@ -252,7 +246,7 @@ public class XmlHandler implements KXml2SAXHandler
                 else if ( localName.equals( XmlConstants.EL_IMPL ) )
                 {
                     // Set the implementation class name (mandatory)
-                    m_currentComponent.setImplementationClassName( attributes.getAttribute( "class" ) );
+                    m_currentComponent.setImplementationClassName( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "class" ) );
                 }
                 // 112.4.5 [...] Property Elements
                 else if ( localName.equals( XmlConstants.EL_PROPERTY ) )
@@ -260,18 +254,18 @@ public class XmlHandler implements KXml2SAXHandler
                     PropertyMetadata prop = new PropertyMetadata();
 
                     // name attribute is mandatory
-                    prop.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
+                    prop.setName( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_NAME ) );
 
                     // type attribute is optional
-                    if ( attributes.getAttribute( XmlConstants.ATTR_TYPE ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_TYPE ) != null )
                     {
-                        prop.setType( attributes.getAttribute( XmlConstants.ATTR_TYPE ) );
+                        prop.setType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_TYPE ) );
                     }
 
                     // 112.4.5: If the value attribute is specified, the body of the element is ignored.
-                    if ( attributes.getAttribute( XmlConstants.ATTR_VALUE ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_VALUE ) != null )
                     {
-                        prop.setValue( attributes.getAttribute( XmlConstants.ATTR_VALUE ) );
+                        prop.setValue( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_VALUE ) );
                         m_currentComponent.addProperty( prop );
                     }
                     else
@@ -283,7 +277,7 @@ public class XmlHandler implements KXml2SAXHandler
                 // 112.4.5 Properties [...] Elements
                 else if ( localName.equals( XmlConstants.EL_PROPERTIES ) )
                 {
-                    final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
+                    final Properties props = readPropertiesEntry( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "entry" ) );
                     // create PropertyMetadata for the properties from the file
                     for ( Map.Entry<Object, Object> pEntry: props.entrySet() )
                     {
@@ -300,18 +294,18 @@ public class XmlHandler implements KXml2SAXHandler
                     PropertyMetadata prop = new PropertyMetadata();
 
                     // name attribute is mandatory
-                    prop.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
+                    prop.setName( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_NAME ) );
 
                     // type attribute is optional
-                    if ( attributes.getAttribute( XmlConstants.ATTR_TYPE ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_TYPE ) != null )
                     {
-                        prop.setType( attributes.getAttribute( XmlConstants.ATTR_TYPE ) );
+                        prop.setType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_TYPE ) );
                     }
 
                     // 112.4.5: If the value attribute is specified, the body of the element is ignored.
-                    if ( attributes.getAttribute( XmlConstants.ATTR_VALUE ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_VALUE ) != null )
                     {
-                        prop.setValue( attributes.getAttribute( XmlConstants.ATTR_VALUE ) );
+                        prop.setValue( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_VALUE ) );
                         m_currentComponent.addFactoryProperty( prop );
                     }
                     else
@@ -323,7 +317,7 @@ public class XmlHandler implements KXml2SAXHandler
                 // 112.4.9 [...] Factory Properties Element
                 else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTIES ) )
                 {
-                    final Properties props = readPropertiesEntry( attributes.getAttribute( "entry" ) );
+                    final Properties props = readPropertiesEntry( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "entry" ) );
                     // create PropertyMetadata for the properties from the file
                     for ( Map.Entry<Object, Object> pEntry: props.entrySet() )
                     {
@@ -340,21 +334,21 @@ public class XmlHandler implements KXml2SAXHandler
                     m_currentService = new ServiceMetadata();
 
                     // servicefactory attribute is optional
-                    if ( attributes.getAttribute( "servicefactory" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "servicefactory" ) != null )
                     {
-                        m_currentService.setServiceFactory( attributes.getAttribute( "servicefactory" ).equals( "true" ) );
+                        m_currentService.setServiceFactory( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "servicefactory" ).equals( "true" ) );
                     }
 
-                    if ( attributes.getAttribute( "scope" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "scope" ) != null )
                     {
-                        m_currentService.setScope( attributes.getAttribute( "scope" ) );
+                        m_currentService.setScope( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "scope" ) );
                     }
 
                     m_currentComponent.setService( m_currentService );
                 }
                 else if ( localName.equals( XmlConstants.EL_PROVIDE ) )
                 {
-                    m_currentService.addProvide( attributes.getAttribute( XmlConstants.ATTR_INTERFACE ) );
+                    m_currentService.addProvide( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_INTERFACE ) );
                 }
 
                 // 112.4.7 Reference element
@@ -363,58 +357,58 @@ public class XmlHandler implements KXml2SAXHandler
                     ReferenceMetadata ref = new ReferenceMetadata();
 
                     // name attribute is optional (since DS 1.1)
-                    if ( attributes.getAttribute( XmlConstants.ATTR_NAME ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_NAME ) != null )
                     {
-                        ref.setName( attributes.getAttribute( XmlConstants.ATTR_NAME ) );
+                        ref.setName( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_NAME ) );
                     }
 
-                    ref.setInterface( attributes.getAttribute( XmlConstants.ATTR_INTERFACE ) );
+                    ref.setInterface( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, XmlConstants.ATTR_INTERFACE ) );
 
                     // Cardinality
-                    if ( attributes.getAttribute( "cardinality" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "cardinality" ) != null )
                     {
-                        ref.setCardinality( attributes.getAttribute( "cardinality" ) );
+                        ref.setCardinality( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "cardinality" ) );
                     }
 
-                    if ( attributes.getAttribute( "policy" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "policy" ) != null )
                     {
-                        ref.setPolicy( attributes.getAttribute( "policy" ) );
+                        ref.setPolicy( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "policy" ) );
                     }
 
-                    if ( attributes.getAttribute( "policy-option" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "policy-option" ) != null )
                     {
-                        ref.setPolicyOption( attributes.getAttribute( "policy-option" ) );
+                        ref.setPolicyOption( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "policy-option" ) );
                     }
 
-                    if ( attributes.getAttribute( "scope" ) != null )
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "scope" ) != null )
                     {
-                        ref.setScope( attributes.getAttribute( "scope" ) );
+                        ref.setScope( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "scope" ) );
                     }
 
-                    if ( attributes.getAttribute( "target" ) != null)
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) != null)
                     {
-                        ref.setTarget( attributes.getAttribute( "target" ) );
+                        ref.setTarget( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) );
                         PropertyMetadata prop = new PropertyMetadata();
                         prop.setName( (ref.getName() == null? ref.getInterface(): ref.getName()) + ".target");
-                        prop.setValue( attributes.getAttribute( "target" ) );
+                        prop.setValue( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "target" ) );
                         m_currentComponent.addProperty( prop );
 
                     }
 
                     // method reference
-                    ref.setBind( attributes.getAttribute( "bind" ) );
-                    ref.setUpdated( attributes.getAttribute( "updated" ) );
-                    ref.setUnbind( attributes.getAttribute( "unbind" ) );
+                    ref.setBind( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "bind" ) );
+                    ref.setUpdated( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "updated" ) );
+                    ref.setUnbind( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "unbind" ) );
 
                     // field reference
-                    ref.setField( attributes.getAttribute( "field" ) );
-                    ref.setFieldOption( attributes.getAttribute( "field-option" ) );
-                    ref.setFieldCollectionType( attributes.getAttribute( "field-collection-type" ) );
+                    ref.setField( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field" ) );
+                    ref.setFieldOption( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-option" ) );
+                    ref.setFieldCollectionType( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "field-collection-type" ) );
 
                     // DS 1.4 : references as parameter of the activator (method or constructor)
-                    if ( attributes.getAttribute( "parameter" ) != null)
+                    if ( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "parameter" ) != null)
                     {
-                        ref.setParameter( attributes.getAttribute( "parameter" ) );
+                        ref.setParameter( attributes.getValue( XmlConstants.NAMESPACE_URI_EMPTY, "parameter" ) );
 
                     }
 
@@ -431,7 +425,7 @@ public class XmlHandler implements KXml2SAXHandler
             }
             catch ( Exception ex )
             {
-                throw new ParseException( "Exception during parsing", ex );
+                throw new SAXException( "Exception during parsing", ex );
             }
         }
 
@@ -445,14 +439,8 @@ public class XmlHandler implements KXml2SAXHandler
     }
 
 
-    /**
-     * Method called when a tag closes
-     *
-     * @param   uri
-     * @param   localName
-     */
     @Override
-    public void endElement( String uri, String localName )
+    public void endElement(String uri, String localName, String qName) throws SAXException
     {
         if ( overrideNamespace != null && XmlConstants.NAMESPACE_URI_EMPTY.equals( uri ) )
         {
@@ -472,71 +460,41 @@ public class XmlHandler implements KXml2SAXHandler
             }
             else if ( localName.equals( XmlConstants.EL_PROPERTY ) && m_pendingProperty != null )
             {
-                // 112.4.5 body expected to contain property value
-                // if so, the m_pendingProperty field would be null
-                // currently, we just ignore this situation
+                if (propertyBuilder != null) {
+                    m_pendingProperty.setValues(propertyBuilder.toString());
+                    propertyBuilder = null;
+                } else {
+                    m_pendingProperty.setValues("");
+                }
+                m_currentComponent.addProperty( m_pendingProperty );
                 m_pendingProperty = null;
             }
             else if ( localName.equals( XmlConstants.EL_FACTORY_PROPERTY ) && m_pendingFactoryProperty != null )
             {
-                // 112.4.5 body expected to contain property value
-                // if so, the m_pendingFactoryProperty field would be null
-                // currently, we just ignore this situation
+                if (propertyBuilder != null) {
+                    m_pendingFactoryProperty.setValues(propertyBuilder.toString());
+                    propertyBuilder = null;
+                } else {
+                    m_pendingFactoryProperty.setValues("");
+                }
+                m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
                 m_pendingFactoryProperty = null;
             }
         }
     }
 
 
-    /**
-     * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#characters(java.lang.String)
-     */
     @Override
-    public void characters( String text )
+    public void characters(char[] ch, int start, int length) throws SAXException
     {
         // 112.4.5 If the value attribute is not specified, the body must contain one or more values
-        if ( m_pendingProperty != null )
+        if ( m_pendingProperty != null || m_pendingFactoryProperty != null )
         {
-            m_pendingProperty.setValues( text );
-            m_currentComponent.addProperty( m_pendingProperty );
-            m_pendingProperty = null;
+            if (propertyBuilder == null) {
+                propertyBuilder = new StringBuilder();
+            }
+            propertyBuilder.append(String.valueOf( ch, start, length));
         }
-        if ( m_pendingFactoryProperty != null )
-        {
-            m_pendingFactoryProperty.setValues( text );
-            m_currentComponent.addFactoryProperty( m_pendingFactoryProperty );
-            m_pendingFactoryProperty = null;
-        }
-    }
-
-
-    /**
-     * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#processingInstruction(java.lang.String, java.lang.String)
-     */
-    @Override
-    public void processingInstruction( String target, String data )
-    {
-        // Not used
-    }
-
-
-    /**
-     * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#setLineNumber(int)
-     */
-    @Override
-    public void setLineNumber( int lineNumber )
-    {
-        // Not used
-    }
-
-
-    /**
-     * @see org.apache.felix.scr.impl.parser.KXml2SAXHandler#setColumnNumber(int)
-     */
-    @Override
-    public void setColumnNumber( int columnNumber )
-    {
-        // Not used
     }
 
 
@@ -548,21 +506,21 @@ public class XmlHandler implements KXml2SAXHandler
      * @param entryName The name of the bundle entry containing the propertes
      *      to be added. This must not be <code>null</code>.
      *
-     * @throws ParseException If the entry name is <code>null</code> or no
+     * @throws SAXException If the entry name is <code>null</code> or no
      *      entry with the given name exists in the bundle or an error occurrs
      *      reading the properties file.
      */
-    private Properties readPropertiesEntry( String entryName ) throws ParseException
+    private Properties readPropertiesEntry( String entryName ) throws SAXException
     {
         if ( entryName == null )
         {
-            throw new ParseException( "Missing entry attribute of properties element", null );
+            throw new SAXException( "Missing entry attribute of properties element", null );
         }
 
         URL entryURL = m_bundle.getEntry( entryName );
         if ( entryURL == null )
         {
-            throw new ParseException( "Missing bundle entry " + entryName, null );
+            throw new SAXException( "Missing bundle entry " + entryName, null );
         }
 
         Properties props = new Properties();
@@ -574,7 +532,7 @@ public class XmlHandler implements KXml2SAXHandler
         }
         catch ( IOException ioe )
         {
-            throw new ParseException( "Failed to read properties entry " + entryName, ioe );
+            throw new SAXException( "Failed to read properties entry " + entryName, ioe );
         }
         finally
         {

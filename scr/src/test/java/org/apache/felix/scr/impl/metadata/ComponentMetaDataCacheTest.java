@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataReader;
 import org.apache.felix.scr.impl.metadata.MetadataStoreHelper.MetaDataWriter;
-import org.xmlpull.v1.XmlPullParserException;
+import org.xml.sax.SAXException;
 
 public class ComponentMetaDataCacheTest extends ComponentBase
 {
@@ -61,7 +61,7 @@ public class ComponentMetaDataCacheTest extends ComponentBase
     }
 
     private void doTestCachedComponentMetadata(String xmlFile, DSVersion version)
-        throws IOException, XmlPullParserException, Exception
+        throws IOException, SAXException, Exception
     {
         final List<?> metadataList = readMetadata(xmlFile);
         assertEquals("Component Descriptors size not as expected", 1,

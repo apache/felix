@@ -19,19 +19,23 @@
 package org.apache.felix.scr.impl.metadata;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.apache.felix.scr.impl.MockBundle;
 import org.apache.felix.scr.impl.logger.MockBundleLogger;
-import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.osgi.service.component.ComponentException;
-import org.xmlpull.v1.XmlPullParserException;
+import org.xml.sax.SAXException;
 
 import junit.framework.TestCase;
 
@@ -47,45 +51,32 @@ public class ComponentBase extends TestCase
         logger = new MockBundleLogger();
     }
 
-    private List readMetadata(final Reader reader)
-        throws IOException, ComponentException, XmlPullParserException, Exception
+    private List readMetadata(InputStream in)
+        throws IOException, ComponentException, SAXException, Exception
     {
+        final SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        final SAXParser parser = factory.newSAXParser();
 
-        try
-        {
-            final KXml2SAXParser parser = new KXml2SAXParser(reader);
+        XmlHandler handler = new XmlHandler(new MockBundle(), logger, false, false);
+        parser.parse(in, handler);
 
-            XmlHandler handler = new XmlHandler(new MockBundle(), logger, false, false);
-            parser.parseXML(handler);
-
-            return handler.getComponentMetadataList();
-        }
-        finally
-        {
-            try
-            {
-                reader.close();
-            }
-            catch (IOException ignore)
-            {
-            }
-        }
+        return handler.getComponentMetadataList();
     }
 
     protected List readMetadata(String filename)
-        throws IOException, ComponentException, XmlPullParserException, Exception
+        throws IOException, ComponentException, SAXException, Exception
     {
-        try (BufferedReader in = new BufferedReader(
-            new InputStreamReader(getClass().getResourceAsStream(filename), "UTF-8")))
+        try (InputStream in = getClass().getResourceAsStream(filename))
         {
             return readMetadata(in);
         }
     }
 
     protected List readMetadataFromString(final String source)
-        throws IOException, ComponentException, XmlPullParserException, Exception
+        throws IOException, ComponentException, SAXException, Exception
     {
-        return readMetadata(new StringReader(source));
+        return readMetadata(new ByteArrayInputStream(source.getBytes()));
     }
 
     protected ReferenceMetadata getReference(final ComponentMetadata cm,

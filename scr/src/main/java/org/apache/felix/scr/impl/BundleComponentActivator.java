@@ -18,10 +18,8 @@
  */
 package org.apache.felix.scr.impl;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +31,9 @@ import java.util.StringTokenizer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.felix.scr.impl.helper.ConfigAdminTracker;
 import org.apache.felix.scr.impl.logger.BundleLogger;
@@ -47,7 +48,6 @@ import org.apache.felix.scr.impl.manager.ExtendedServiceListener;
 import org.apache.felix.scr.impl.manager.RegionConfigurationSupport;
 import org.apache.felix.scr.impl.manager.ScrConfiguration;
 import org.apache.felix.scr.impl.metadata.ComponentMetadata;
-import org.apache.felix.scr.impl.parser.KXml2SAXParser;
 import org.apache.felix.scr.impl.xml.XmlHandler;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -276,7 +276,7 @@ public class BundleComponentActivator implements ComponentActivator
     /**
      * Gets the MetaData location, parses the meta data and requests the processing
      * of binder instances
-     * @param cachedComponentMetadata 
+     * @param cachedComponentMetadata
      *
      * @throws IllegalStateException If the bundle has already been uninstalled.
      */
@@ -320,6 +320,7 @@ public class BundleComponentActivator implements ComponentActivator
                         descriptorLocation);
                     continue;
                 }
+
 
                 // load from the descriptors
                 for (URL descriptorURL : descriptorURLs)
@@ -434,12 +435,13 @@ public class BundleComponentActivator implements ComponentActivator
         {
             stream = descriptorURL.openStream();
 
-            BufferedReader in = new BufferedReader( new InputStreamReader( stream, "UTF-8" ) );
             XmlHandler handler = new XmlHandler( m_bundle, this.logger, getConfiguration().isFactoryEnabled(),
                 getConfiguration().keepInstances() );
-            final KXml2SAXParser parser = new KXml2SAXParser( in );
+            final SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            final SAXParser parser = factory.newSAXParser();
 
-            parser.parseXML( handler );
+            parser.parse( stream, handler );
 
             // 112.4.2 Component descriptors may contain a single, root component element
             // or one or more component elements embedded in a larger document

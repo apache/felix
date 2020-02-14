@@ -21,8 +21,8 @@ package org.apache.felix.scr.impl.metadata;
 
 import java.util.List;
 
-import org.apache.felix.scr.impl.parser.ParseException;
 import org.osgi.service.component.ComponentException;
+import org.xml.sax.SAXException;
 
 
 public class XmlHandlerTest extends ComponentBase
@@ -35,7 +35,7 @@ public class XmlHandlerTest extends ComponentBase
             readMetadataFromString( "<component name=\"n\"><implementation class=\"n\" /><component name=\"x\">" );
             fail( "ParseException expected for unclosed elements" );
         }
-        catch ( ParseException pe )
+        catch ( SAXException pe )
         {
             // exptected
         }
@@ -49,7 +49,7 @@ public class XmlHandlerTest extends ComponentBase
             readMetadataFromString( "</component>" );
             fail( "Exception expected for element without opening element" );
         }
-        catch ( Exception p )
+        catch ( SAXException p )
         {
             // exptected
         }
