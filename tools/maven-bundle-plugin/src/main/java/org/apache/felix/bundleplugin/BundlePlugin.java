@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1564,6 +1565,19 @@ public class BundlePlugin extends AbstractMojo
     }
 
 
+    private static Date getReproducibleBuildDate() {
+        String envVariable = System.getenv("SOURCE_DATE_EPOCH");
+        if (envVariable == null) {
+            return null;
+        }
+        try {
+            return new Date(Long.parseLong(envVariable)*1000);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
     /**
      * @param jar
      * @throws IOException
@@ -1582,7 +1596,8 @@ public class BundlePlugin extends AbstractMojo
             jar.putResource( path + "/pom.xml", new FileResource( pomFile ) );
         }
 
-        Properties p = new Properties();
+        java.util.Date buildDate = getReproducibleBuildDate();
+        Properties p = buildDate == null ? new Properties() : new TimestampedProperties(buildDate);
         p.put( "version", currentProject.getVersion() );
         p.put( "groupId", currentProject.getGroupId() );
         p.put( "artifactId", currentProject.getArtifactId() );
