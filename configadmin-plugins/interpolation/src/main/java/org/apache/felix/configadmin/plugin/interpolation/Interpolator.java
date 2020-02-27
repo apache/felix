@@ -77,6 +77,9 @@ public class Interpolator {
             while (index < result.length() && count > 0) {
                 if (result.charAt(index) == '[' && result.charAt(index - 1) == '$') {
                     count++;
+                } else if (result.charAt(index) == '[' && index < result.length() - 1
+                        && result.charAt(index + 1) == ']') {
+                    count++;
                 } else if (result.charAt(index) == END) {
                     count--;
                 }
