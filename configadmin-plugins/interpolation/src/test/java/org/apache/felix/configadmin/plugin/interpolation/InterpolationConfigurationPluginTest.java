@@ -16,6 +16,7 @@
  */
 package org.apache.felix.configadmin.plugin.interpolation;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -196,5 +197,27 @@ public class InterpolationConfigurationPluginTest {
         InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
 
         assertEquals("hello there", plugin.replace("akey", "$[prop:$[prop:key]]", "apid"));
+    }
+
+    @Test
+    public void testArraySplit() throws Exception {
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(null, null, null);
+
+        assertArrayEquals(new String[] { "a,b,c" }, plugin.split("a,b,c", "."));
+        assertArrayEquals(new String[] { "a", "b", "c" }, plugin.split("a,b,c", ","));
+        assertArrayEquals(new String[] { "a,b", "c" }, plugin.split("a\\,b,c", ","));
+        assertArrayEquals(new String[] { "a\\", "b", "c" }, plugin.split("a\\\\,b,c", ","));
+    }
+
+    @Test
+    public void testArrayTypeConversion() throws Exception {
+        BundleContext bc = Mockito.mock(BundleContext.class);
+        Mockito.when(bc.getProperty("foo")).thenReturn("2000,3000");
+        InterpolationConfigurationPlugin plugin = new InterpolationConfigurationPlugin(bc, null, null);
+
+        assertArrayEquals(new Integer[] { 2000, 3000 },
+                (Integer[]) plugin.replace("key", "$[prop:foo;type=Integer[];delimiter=,]", "somepid"));
+        assertArrayEquals(new Integer[] { 1, 2 },
+                (Integer[]) plugin.replace("key", "$[prop:bar;type=Integer[];delimiter=,;default=1,2]", "somepid"));
     }
 }

@@ -7,9 +7,9 @@ An OSGi Configuration Admin Plugin that can interpolate values in configuration 
 * Framework properties
 * System properties
 
-## Usage with Kubernetes secrets
+## Usage with Secret Files
 
-The Kubernetes secrets will surface as file at a certain mountpoint, e.g.:
+Usually secrets (for example when provided by Kubernetes) will surface as files at a certain mount point, e.g.:
 
 ```
 $ ls /mnt/mysecrets
@@ -55,12 +55,51 @@ with this key is returned.
 
 Property values are obtained through the `$[prop:my.property]` syntax.
 
+## Default Values
+
+It is possible to specify a default value as part of the placeholder, for example:
+
+```
+"port" : "$[env:PORT;default=8080]"
+```
+
+Without a default, the placeholder is left in the value if no value can be found. With a default, the default is used instead.
+
+## Type Support
+
+A placeholder can contain additional information like the type the value should be converted to.
+
+
+```
+"port" : "$[env:PORT;type=Integer]"
+```
+
+In the above example, an Integer object with the port will be put into the Configuration instead of a String value.
+
+### Supported Scalar and Primitive Types
+
+The following types are supported: String, Integer, int, Long, long, Float, float, Double, double, Byte, byte, Short, short, Character, char, Boolean, boolean.
+
+### Supported Array Types
+
+The following array types are supported: String[], Integer[], int[], Long[], long[], Float[], float[], Double[], double[], Byte[], byte[], Short[], short[], Character[], char[], Boolean[], boolean[].
+
+A provided value (including the default value) can be split up into a string array before conversion by configuring a delimiter as part of the placeholder:
+
+```
+"ports" : "$[env:PORT;type=Integer[];delimiter=,;default=8080,8081]"
+```
+
 ## Configuration of the plugin
+
+The plugin (and Configuration Admin) can be controlled by various properties. These properties are
+framework properties and can be provided on initialization of the OSGi framework or as system properties
+as framework properties default to system properties.
 
 ### Consistent processing
 
-It is recommended to configure the ConfigAdmin to only start processing once this plugin is active. In case of
-the Felix ConfigAdmin implementation, this can be achieved by using the following property:
+It is recommended to configure the Configuration Admin to only start processing once this plugin is active. In case of
+the Apache Felix ConfigAdmin implementation, this can be achieved by using the following property:
 
 * `felix.cm.config.plugins`: `org.apache.felix.configadmin.plugin.interpolation`
 
@@ -73,6 +112,11 @@ This is done through the following property:
 
 * `org.apache.felix.configadmin.plugin.interpolation.secretsdir`: specify the directory where the files used for the file-based interpolation, such as Kubernetes secrets, are mounted.
 
-The property can be provided as an OSGi Framework property or alternatively as a Java System Property. 
-
 If the property is not present, the plugin will function, but without being able to replace values based on secrets.
+
+### File Encoding
+
+When reading files, for example secrets, the platform default encoding is used. The following property can be used to to control the reading:
+
+* `org.apache.felix.configadmin.plugin.interpolation.file.encoding` : specify the encoding to be used.
+

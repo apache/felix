@@ -20,9 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
@@ -41,6 +44,9 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
     private static final String TYPE_SECRET = "secret";
 
     private static final String DIRECTIVE_TYPE = "type";
+
+    /** Delimiter for splitting up a single value into an array. */
+    private static final String DIRECTIVE_DELIMITER = "delimiter";
 
     private static final String DIRECTIVE_DEFAULT = "default";
 
@@ -166,7 +172,7 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
                 v = dir.get(DIRECTIVE_DEFAULT);
             }
             if (v != null && dir.containsKey(DIRECTIVE_TYPE)) {
-                return convertType(dir.get(DIRECTIVE_TYPE), v);
+                return convertType(dir.get(DIRECTIVE_TYPE), v, dir.get(DIRECTIVE_DELIMITER));
             }
             return v;
         });
@@ -216,17 +222,87 @@ class InterpolationConfigurationPlugin implements ConfigurationPlugin {
         return new String(bytes, this.encodingCharset).trim();
     }
 
-    private Object convertType(String type, String s) {
+    /**
+     * Convert the value to the given type
+     *
+     * @param type      The type (optional)
+     * @param value     The value
+     * @param delimiter The delimiter for array types (optional)
+     * @return The converted value
+     */
+    Object convertType(final String type, final String value, final String delimiter) {
         if (type == null) {
-            return s;
+            return value;
         }
 
         Class<?> cls = TYPE_MAP.get(type);
         if (cls != null) {
-            return Converters.standardConverter().convert(s).to(cls);
+            if ((cls.isArray() || Collection.class.isAssignableFrom(cls)) && delimiter != null) {
+                final String[] array = split(value, delimiter);
+                return Converters.standardConverter().convert(array).to(cls);
+            }
+            return Converters.standardConverter().convert(value).to(cls);
         }
 
         getLog().warn("Cannot convert to type: " + type);
-        return s;
+        return value;
+    }
+
+    /**
+     * Split a string into an array of strings. A backslash can be used to escape
+     * the delimiter (avoiding splitting), unless that backslash is preceded by
+     * another backslash, in which case the two backslashes are replaced by a single
+     * one and the value is split after the backslash.
+     * 
+     * @param value     The value to split
+     * @param delimiter The delimiter
+     * @return The resulting array
+     */
+    String[] split(String value, final String delimiter) {
+        List<String> result = null;
+        int start = -1;
+        while (start < value.length()) {
+            start = value.indexOf(delimiter, start + 1);
+            if (start == -1) {
+                // no delimiter found -> end
+                start = value.length();
+                if (result != null) {
+                    result.add(value);
+                }
+            } else {
+
+                boolean split = true;
+                if (start > 1 && value.charAt(start - 1) == Interpolator.ESCAPE) {
+                    if (start == 1 || value.charAt(start - 2) != Interpolator.ESCAPE) {
+                        split = false;
+                    } else if (value.charAt(start - 2) == Interpolator.ESCAPE) {
+                        value = value.substring(0, start - 2).concat(value.substring(start - 1));
+                        start--;
+                    }
+                }
+
+                if (split) {
+                    if (result == null) {
+                        result = new ArrayList<String>();
+                    }
+                    result.add(value.substring(0, start));
+                    value = value.substring(start + delimiter.length());
+                    start = -1;
+                } else {
+                    if (start == 1) {
+                        value = value.substring(1);
+                    } else {
+                        value = value.substring(0, start - 1).concat(value.substring(start));
+                        start--;
+                    }
+                }
+            }
+
+        }
+
+        if (result == null) {
+            return new String[] { value };
+        }
+        return result.toArray(new String[result.size()]);
     }
 }
