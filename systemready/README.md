@@ -1,3 +1,0 @@
-# OSGi system ready check framework
-
-Felix System Ready is obsolete and superseded by [Apache Felix Health Checks](https://felix.apache.org/documentation/subprojects/apache-felix-healthchecks.html). Use the out-of-the-box health checks in bundle [org.apache.felix.healthcheck.generalchecks](https://github.com/apache/felix/blob/trunk/healthcheck/README.md#general-purpose-health-checks-available-out-of-the-box).

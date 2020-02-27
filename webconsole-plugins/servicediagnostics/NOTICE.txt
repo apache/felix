@@ -1,7 +1,0 @@
-This project is using third party javascript libraries, under core/src/main/resources/html/js
-- jquery.js
-- raphael.js
-- graffle.js
-- graph.js
-
-In my understanding, these are all MIT licences.
