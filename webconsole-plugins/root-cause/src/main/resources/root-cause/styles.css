@@ -1,0 +1,57 @@
+.root-cause {
+  /*root*/
+}
+
+
+.root-cause-form__component-name {
+  width: 60%;
+}
+
+.root-cause-line {
+  word-break: break-word;
+  max-width: 85%;
+}
+
+/* Utils */
+.root-cause .f-16 {
+  font-size: 16px;
+  line-height: 26px;
+}
+
+.root-cause .f-14 {
+  font-size: 14px;
+}
+
+.root-cause .f-12 {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+
+.root-cause .p-10 {
+  padding: 10px;
+}
+
+.root-cause .p-t-20 {
+  padding: 20px;
+}
+
+.root-cause .bold {
+  font-weight: bold;
+}
+
+.root-cause .inline-block {
+  display: inline-block;
+}
+
+.root-cause .c-red {
+  color: red;
+}
+
+.root-cause .c-green {
+  color: green;
+}
+
+.root-cause .c-mediumblue {
+  color: mediumblue;
+}

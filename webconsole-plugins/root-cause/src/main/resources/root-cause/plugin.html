@@ -1,0 +1,30 @@
+<script src="root-cause/jquery-ui-1.12.1.custom/jquery-ui.min.js" type="text/javascript"></script>
+
+<script src="root-cause/scripts.js" type="text/javascript"></script>
+
+<link href="root-cause/jquery-ui-1.12.1.custom/jquery-ui.min.css" rel="stylesheet"/>
+<link href="root-cause/jquery-ui-1.12.1.custom/jquery-ui.theme.min.css" rel="stylesheet"/>
+
+<link href="root-cause/styles.css" rel="stylesheet"/>
+<div class="root-cause"
+     data-rootcause="root-cause/rootcause.json"
+     data-components="root-cause/components.json">
+  <div class="ui-widget-header p-10 ui-corner-top">
+    <h1 class="root-cause-header f-16 bold">OSGI Component Root Cause</h1>
+    Finding the root cause of problems with OSGi declarative services components.
+  </div>
+  <form>
+    <div class="root-cause-form p-10 ui-state-default">
+      <span>Component Name: </span>
+      <input type="text" autocomplete="off" title="Enter an OSGI Component Name" class="root-cause-form__component-name ui-autocomplete-input">
+      <button type="button" class="root-cause-form__find-button ui-state-default ui-corner-all" style="min-width: 8em;">Find Cause</button>
+    </div>
+
+    <div class="p-10 p-t-20 root-cause__result ui-state-active">
+      Search For a Component by name, for example: "org.apache.felix.webconsole.plugins.rootcause.internal.RootCausePlugin"
+    </div>
+    <div class="p-10 root-cause__loading ui-state-highlight" style="display:none">
+      Loading...
+    </div>
+  </form>
+</div>
